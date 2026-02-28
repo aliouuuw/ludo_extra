@@ -36,15 +36,8 @@ const PLAYER_COLORS: PlayerColor[] = ['red', 'yellow', 'green', 'blue'];
 const YARD_COORDS: Record<PlayerColor, { col: number; row: number; colSpan: number; rowSpan: number }> = {
   red:    { col: 0, row: 0,  colSpan: 6, rowSpan: 6 },
   yellow: { col: 9, row: 0,  colSpan: 6, rowSpan: 6 },
-  green:  { col: 0, row: 9,  colSpan: 6, rowSpan: 6 },
-  blue:   { col: 9, row: 9,  colSpan: 6, rowSpan: 6 },
-};
-
-const YARD_LABELS: Record<PlayerColor, string> = {
-  red: 'ROUGE',
-  yellow: 'JAUNE',
-  green: 'VERT',
-  blue: 'BLEU',
+  blue:   { col: 0, row: 9,  colSpan: 6, rowSpan: 6 },
+  green:  { col: 9, row: 9,  colSpan: 6, rowSpan: 6 },
 };
 
 const PLAYER_BG: Record<PlayerColor, string> = {
@@ -134,16 +127,16 @@ export function Board({
     return (
       (col <= 5 && row <= 5) ||   // red
       (col >= 9 && row <= 5) ||   // yellow
-      (col <= 5 && row >= 9) ||   // green
-      (col >= 9 && row >= 9)      // blue
+      (col <= 5 && row >= 9) ||   // blue
+      (col >= 9 && row >= 9)      // green
     );
   }
 
   function getYardColorForCell(col: number, row: number): PlayerColor | null {
     if (col <= 5 && row <= 5) return 'red';
     if (col >= 9 && row <= 5) return 'yellow';
-    if (col <= 5 && row >= 9) return 'green';
-    if (col >= 9 && row >= 9) return 'blue';
+    if (col <= 5 && row >= 9) return 'blue';
+    if (col >= 9 && row >= 9) return 'green';
     return null;
   }
 
@@ -174,10 +167,6 @@ export function Board({
 
       if (isYardCell(col, row)) {
         const yardColor = getYardColorForCell(col, row)!;
-        const isYardLabelCell = (yardColor === 'red' && col === 3 && row === 0) ||
-                                 (yardColor === 'yellow' && col === 11 && row === 0) ||
-                                 (yardColor === 'green' && col === 3 && row === 9) ||
-                                 (yardColor === 'blue' && col === 11 && row === 9);
         cells.push(
           <div
             key={coordKey}
@@ -189,26 +178,10 @@ export function Board({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              position: 'relative',
             }}
             role="cell"
             aria-label={`Cour ${yardColor}`}
           >
-            {isYardLabelCell && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: 'var(--space-1)',
-                  fontSize: 'var(--text-caption)',
-                  fontWeight: 600,
-                  color: 'var(--color-neutral-500)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                {YARD_LABELS[yardColor]}
-              </span>
-            )}
             {tokensHere.map((token) => (
               <TokenPiece
                 key={token.id}

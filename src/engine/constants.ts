@@ -30,14 +30,14 @@ export const STARTING_SQUARE: Record<PlayerColor, number> = {
  * it transitions to zone 'home_column' at index 0.
  */
 export const HOME_ENTRY_SQUARE: Record<PlayerColor, number> = {
-  red: 50,
-  yellow: 11,
-  green: 24,
-  blue: 37,
+  red: 51,
+  yellow: 12,
+  green: 25,
+  blue: 38,
 } as const;
 
 /**
  * Fixed safe squares on the common path where, by default (Classic rules),
  * tokens cannot be captured. When Territory Captures is ON, immunity is removed.
  */
-export const SAFE_SQUARES: readonly number[] = [0, 8, 13, 21, 26, 34, 39, 47] as const;
+export const SAFE_SQUARES: readonly number[] = [0, 8, 13, 21, 26, 34, 39, 47] as const; // sq 0/13/26/39 = starting squares; sq 8/21/34/47 = mid-arm safe squares

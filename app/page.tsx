@@ -121,6 +121,7 @@ export default function Home() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 'var(--space-2)',
+                    opacity: isActive ? 1 : 0.6,
                   }}
                 >
                   <span
@@ -130,7 +131,6 @@ export default function Home() {
                       borderRadius: 'var(--radius-full)',
                       backgroundColor: `var(--color-player-${p.color})`,
                       flexShrink: 0,
-                      opacity: isActive ? 1 : 0.7,
                     }}
                   />
                   <span style={{ fontSize: 'var(--text-sm)', fontWeight: isActive ? 600 : 400, flex: 1, color: 'var(--color-neutral-800)' }}>

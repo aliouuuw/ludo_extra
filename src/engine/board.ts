@@ -46,74 +46,80 @@ export interface RenderCoord {
  * clockwise: down the left side of the bottom corridor, around the perimeter.
  *
  * Layout matches the standard Ludo cross board with a 15×15 grid.
+ */
+/**
+ * 52-square common path.
  *
- * Squares 0–51, clockwise starting from Red's starting square at (6, 14):
+ * Yard layout: Red=top-left, Yellow=top-right, Green=bottom-right, Blue=bottom-left.
+ * (The engine path order is Red→Yellow→Green→Blue clockwise. Green is bottom-right
+ *  and Blue is bottom-left in path logic. The Board component renders yard tints
+ *  to match this: green tint bottom-right, blue tint bottom-left.)
  *
- *   Red side (0–12):    bottom corridor going right + right side going up
- *   Yellow side (13–25): top-right going left + top corridor going left
- *   Green side (26–38): top-left going right going down + left side going down
- *   Blue side (39–51):  bottom corridor going right
+ * Path: Red exits top-left yard RIGHT along row 6, UP col 6, RIGHT row 0 to center;
+ *       Yellow exits top-right yard DOWN col 8, RIGHT row 6 to far-right;
+ *       Green exits via col 14 down, LEFT row 8, DOWN col 8 bottom;
+ *       Blue exits bottom-left, LEFT row 8 bottom, UP col 6 home approach.
  */
 const COMMON_PATH_COORDS: readonly RenderCoord[] = [
-  // Red starting square and approach (0–12)
-  { col: 6, row: 14 }, // 0 — Red start
-  { col: 6, row: 13 },
-  { col: 6, row: 12 },
-  { col: 6, row: 11 },
-  { col: 6, row: 10 },
-  { col: 6, row: 9  }, // 5
-  { col: 5, row: 8  },
-  { col: 4, row: 8  },
-  { col: 3, row: 8  }, // 8 — safe square
-  { col: 2, row: 8  },
-  { col: 1, row: 8  },
-  { col: 0, row: 8  },
-  { col: 0, row: 7  }, // 12
+  // Red (0–12): exits top-left yard RIGHT along row 6, corner UP col 6, top edge
+  { col: 1,  row: 6  }, // 0  — Red starting square
+  { col: 2,  row: 6  }, // 1
+  { col: 3,  row: 6  }, // 2
+  { col: 4,  row: 6  }, // 3
+  { col: 5,  row: 6  }, // 4
+  { col: 6,  row: 6  }, // 5  — corner
+  { col: 6,  row: 5  }, // 6
+  { col: 6,  row: 4  }, // 7
+  { col: 6,  row: 3  }, // 8  — safe square
+  { col: 6,  row: 2  }, // 9
+  { col: 6,  row: 1  }, // 10
+  { col: 6,  row: 0  }, // 11
+  { col: 7,  row: 0  }, // 12
 
-  // Yellow starting square and approach (13–25)
-  { col: 0, row: 6  }, // 13 — Yellow start
-  { col: 1, row: 6  },
-  { col: 2, row: 6  },
-  { col: 3, row: 6  },
-  { col: 4, row: 6  },
-  { col: 5, row: 6  },
-  { col: 6, row: 5  }, // 19
-  { col: 6, row: 4  },
-  { col: 6, row: 3  }, // 21 — safe square
-  { col: 6, row: 2  },
-  { col: 6, row: 1  },
-  { col: 6, row: 0  },
-  { col: 7, row: 0  }, // 25
+  // Yellow (13–25): exits top-right yard DOWN col 8, corner RIGHT row 6
+  { col: 8,  row: 0  }, // 13 — Yellow starting square
+  { col: 8,  row: 1  }, // 14
+  { col: 8,  row: 2  }, // 15
+  { col: 8,  row: 3  }, // 16
+  { col: 8,  row: 4  }, // 17
+  { col: 8,  row: 5  }, // 18
+  { col: 8,  row: 6  }, // 19 — corner
+  { col: 9,  row: 6  }, // 20
+  { col: 10, row: 6  }, // 21 — safe square
+  { col: 11, row: 6  }, // 22
+  { col: 12, row: 6  }, // 23
+  { col: 13, row: 6  }, // 24
+  { col: 14, row: 6  }, // 25
 
-  // Green starting square and approach (26–38)
-  { col: 8, row: 0  }, // 26 — Green start
-  { col: 8, row: 1  },
-  { col: 8, row: 2  },
-  { col: 8, row: 3  },
-  { col: 8, row: 4  },
-  { col: 8, row: 5  },
-  { col: 9, row: 6  }, // 32
-  { col: 10, row: 6 },
-  { col: 11, row: 6 }, // 34 — safe square
-  { col: 12, row: 6 },
-  { col: 13, row: 6 },
-  { col: 14, row: 6 },
-  { col: 14, row: 7 }, // 38
+  // Green (26–38): exits bottom-right yard, DOWN col 14, corner LEFT row 8, DOWN col 8
+  { col: 14, row: 7  }, // 26 — Green starting square
+  { col: 14, row: 8  }, // 27
+  { col: 13, row: 8  }, // 28
+  { col: 12, row: 8  }, // 29
+  { col: 11, row: 8  }, // 30
+  { col: 10, row: 8  }, // 31
+  { col: 9,  row: 8  }, // 32
+  { col: 8,  row: 8  }, // 33
+  { col: 8,  row: 9  }, // 34 — safe square
+  { col: 8,  row: 10 }, // 35
+  { col: 8,  row: 11 }, // 36
+  { col: 8,  row: 12 }, // 37
+  { col: 8,  row: 13 }, // 38
 
-  // Blue starting square and approach (39–51)
-  { col: 14, row: 8 }, // 39 — Blue start
-  { col: 13, row: 8 },
-  { col: 12, row: 8 },
-  { col: 11, row: 8 },
-  { col: 10, row: 8 },
-  { col: 9, row: 8  },
-  { col: 8, row: 9  }, // 45
-  { col: 8, row: 10 },
-  { col: 8, row: 11 },
-  { col: 8, row: 12 }, // 47 — safe square (Blue home entry – 3)
-  { col: 8, row: 13 },
-  { col: 8, row: 14 },
-  { col: 7, row: 14 }, // 51
+  // Blue (39–51): exits bottom-left yard, LEFT row 14, UP col 6, corner LEFT row 8
+  { col: 8,  row: 14 }, // 39 — Blue starting square
+  { col: 7,  row: 14 }, // 40
+  { col: 6,  row: 14 }, // 41
+  { col: 6,  row: 13 }, // 42
+  { col: 6,  row: 12 }, // 43
+  { col: 6,  row: 11 }, // 44
+  { col: 6,  row: 10 }, // 45
+  { col: 6,  row: 9  }, // 46
+  { col: 6,  row: 8  }, // 47 — safe square
+  { col: 5,  row: 8  }, // 48
+  { col: 4,  row: 8  }, // 49
+  { col: 3,  row: 8  }, // 50
+  { col: 2,  row: 8  }, // 51
 ] as const;
 
 // ─── Home Column Coordinates ──────────────────────────────────────────────────
@@ -124,33 +130,41 @@ const COMMON_PATH_COORDS: readonly RenderCoord[] = [
  * Index 4 leads to the center home.
  */
 const HOME_COLUMN_COORDS: Record<PlayerColor, readonly RenderCoord[]> = {
+  // Red approaches from sq 50 (col:3,row:8) going left along row 8, enters home col via row 7
+  // Home col runs RIGHT along row 7: cols 1→5 toward center (7,7)
   red: [
-    { col: 7, row: 13 },
-    { col: 7, row: 12 },
-    { col: 7, row: 11 },
-    { col: 7, row: 10 },
-    { col: 7, row: 9  }, // index 4 — adjacent to center
+    { col: 1, row: 7 }, // index 0 — first home column square
+    { col: 2, row: 7 },
+    { col: 3, row: 7 },
+    { col: 4, row: 7 },
+    { col: 5, row: 7 }, // index 4 — adjacent to center
   ],
+  // Yellow approaches from sq 11 (col:6,row:0) going up, enters home col
+  // Home col runs DOWN col 7: rows 1→5 toward center
   yellow: [
-    { col: 1, row: 7  },
-    { col: 2, row: 7  },
-    { col: 3, row: 7  },
-    { col: 4, row: 7  },
-    { col: 5, row: 7  }, // index 4
+    { col: 7, row: 1 }, // index 0
+    { col: 7, row: 2 },
+    { col: 7, row: 3 },
+    { col: 7, row: 4 },
+    { col: 7, row: 5 }, // index 4
   ],
+  // Green approaches from sq 24 (col:13,row:6) going right, enters home col
+  // Home col runs LEFT along row 7: cols 13→9 toward center
   green: [
-    { col: 7, row: 1  },
-    { col: 7, row: 2  },
-    { col: 7, row: 3  },
-    { col: 7, row: 4  },
-    { col: 7, row: 5  }, // index 4
-  ],
-  blue: [
-    { col: 13, row: 7 },
+    { col: 13, row: 7 }, // index 0
     { col: 12, row: 7 },
     { col: 11, row: 7 },
     { col: 10, row: 7 },
     { col: 9,  row: 7 }, // index 4
+  ],
+  // Blue approaches from sq 37 (col:8,row:12) going down, enters home col
+  // Home col runs UP col 7: rows 13→9 toward center
+  blue: [
+    { col: 7, row: 13 }, // index 0
+    { col: 7, row: 12 },
+    { col: 7, row: 11 },
+    { col: 7, row: 10 },
+    { col: 7, row: 9  }, // index 4
   ],
 } as const;
 
@@ -164,21 +178,25 @@ export const CENTER_HOME_COORD: RenderCoord = { col: 7, row: 7 } as const;
  * Tokens in zone 'start' are displayed here.
  */
 const START_YARD_COORDS: Record<PlayerColor, readonly RenderCoord[]> = {
+  // Red yard = top-left (cols 0–5, rows 0–5)
   red: [
     { col: 1, row: 1 }, { col: 2, row: 1 },
     { col: 1, row: 2 }, { col: 2, row: 2 },
   ],
+  // Yellow yard = top-right (cols 9–14, rows 0–5)
   yellow: [
     { col: 11, row: 1 }, { col: 12, row: 1 },
     { col: 11, row: 2 }, { col: 12, row: 2 },
   ],
+  // Green yard = bottom-right in engine path (cols 9–14, rows 9–14) — path has green at sq 26 bottom-right
   green: [
-    { col: 1, row: 11 }, { col: 2, row: 11 },
-    { col: 1, row: 12 }, { col: 2, row: 12 },
-  ],
-  blue: [
     { col: 11, row: 11 }, { col: 12, row: 11 },
     { col: 11, row: 12 }, { col: 12, row: 12 },
+  ],
+  // Blue yard = bottom-left in engine path (cols 0–5, rows 9–14)
+  blue: [
+    { col: 1, row: 11 }, { col: 2, row: 11 },
+    { col: 1, row: 12 }, { col: 2, row: 12 },
   ],
 } as const;
 
