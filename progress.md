@@ -227,3 +227,27 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-03: Implement movement and path validation (Classic rules)
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/movement.ts` — `computeDestination`, `isTokenMoveable`, `getSelectableTokenIds`, `isSamePosition`
+- Private helpers: `advanceBoardSquare`, `stepsToHomeEntry`, `resolveHomeColumnLanding`
+- `movement.ts` added to barrel export
+
+**Design decisions:**
+- `computeDestination` returns `TokenPosition | null` — null means "no valid landing" (overshoot-stay, already home, start without 6). Callers treat null as unmoveable.
+- `resolveHomeColumnLanding` centralizes all home-column edge cases: exact landing → `home`, overshoot-stay → same position (filtered as no-op), overshoot-bounce → bounce back from center.
+- `stepsToHomeEntry` uses modular arithmetic so it works regardless of the token's current lap position.
+- `getSelectableTokenIds` filters out overshoot-stay no-ops via `isSamePosition` check.
+
+**Assumptions made:**
+- Bounce overshoot below home_column index 0 is clamped at 0; home column exit back onto board is Extra Mode only (engine-05)
+- Capture filtering added in engine-04; `getSelectableTokenIds` here covers movement legality only
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
