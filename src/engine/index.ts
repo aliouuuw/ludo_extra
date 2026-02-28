@@ -7,3 +7,4 @@ export * from './movement';
 export * from './capture';
 export * from './extra-rules';
 export * from './reducer';
+export * from './replay';

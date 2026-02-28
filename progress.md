@@ -334,3 +334,29 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-07: Define replay and move log format and implement serialization
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/replay.ts` — `ReplayRecord`, `SerializedAction`, `exportReplay`, `serializeReplay`, `deserializeReplay`, `reconstructFromReplay`, `recordAction`, `hydrateAction`
+- `DeserializeResult` and `ReconstructResult` discriminated union types
+- `replay.ts` added to barrel export
+
+**Design decisions:**
+- `ReplayRecord` stores seed + action list only (not full state snapshots) — compact format, full state is derived by replaying actions
+- `REPLAY_VERSION = 1` constant; `deserializeReplay` hard-fails on version mismatch to prevent silent corruption
+- `recordAction` / `hydrateAction` are symmetric: record serializes before applying, hydrate reconstructs a live action for `applyAction`
+- `ROLL_DICE` actions are stored as `rngSeed` (the RNG state before the roll) — reconstructing with `createRng(rngSeed)` produces an identical roll sequence
+- `reconstructFromReplay` accepts optional `upToIndex` for step-by-step replay viewer (engine-11 UI)
+- `deserializeReplay` validates schema defensively without throwing — returns typed error result
+
+**Assumptions made:**
+- Corrupt or stale saves detected by version mismatch or missing required fields; no deep validation of individual action payloads (that's enforced by `applyAction` during reconstruction)
+- `finalPlacements` is a convenience snapshot; authoritative placements come from reconstructed state
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
