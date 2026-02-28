@@ -13,18 +13,22 @@
  * Do not use when: showing a replay overview (use a read-only snapshot variant)
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { getRenderCoord, validateBoardMapping, getCommonPath, isFixedSafeSquare, getSquareColor, CENTER_HOME_COORD } from '../../engine/board';
 import type { GameState, PlayerColor, Token, TokenPosition } from '../../engine/types';
 import { STARTING_SQUARE } from '../../engine/constants';
 import { BoardSquare } from '../primitives/BoardSquare';
 import { TokenPiece } from '../primitives/TokenPiece';
 import { ErrorState } from '../patterns/ErrorState';
+import { MoveAnimationLayer } from './MoveAnimationLayer';
+import type { PendingAnimation } from './MoveAnimationLayer';
 
 interface BoardProps {
   gameState: GameState;
   onTokenSelect: (tokenId: string) => void;
   onTokenDeselect: () => void;
+  pendingAnimation?: PendingAnimation | null;
+  onAnimationComplete?: () => void;
 }
 
 const PLAYER_COLORS: PlayerColor[] = ['red', 'yellow', 'green', 'blue'];
@@ -56,8 +60,15 @@ type TokenWithStatus = Token & {
   status: 'default' | 'selectable' | 'selected' | 'opponent' | 'home';
 };
 
-export function Board({ gameState, onTokenSelect, onTokenDeselect }: BoardProps) {
+export function Board({
+  gameState,
+  onTokenSelect,
+  onTokenDeselect,
+  pendingAnimation = null,
+  onAnimationComplete = () => {},
+}: BoardProps) {
   const mappingValid = useMemo(() => isBoardMappingValid(), []);
+  const boardRef = useRef<HTMLDivElement>(null);
 
   if (!mappingValid) {
     return (
@@ -227,24 +238,37 @@ export function Board({ gameState, onTokenSelect, onTokenDeselect }: BoardProps)
 
   return (
     <div
-      role="grid"
-      aria-label="Plateau de Ludo"
       style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(15, 1fr)',
-        gridTemplateRows: 'repeat(15, 1fr)',
+        position: 'relative',
         width: '100%',
         maxWidth: 'min(90vw, 90vh)',
-        aspectRatio: '1',
         margin: '0 auto',
-        border: '2px solid var(--color-border)',
-        borderRadius: 'var(--radius-md)',
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-lg)',
-        backgroundColor: 'var(--color-neutral-50)',
       }}
     >
-      {cells}
+      <div
+        ref={boardRef}
+        role="grid"
+        aria-label="Plateau de Ludo"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(15, 1fr)',
+          gridTemplateRows: 'repeat(15, 1fr)',
+          width: '100%',
+          aspectRatio: '1',
+          border: '2px solid var(--color-border)',
+          borderRadius: 'var(--radius-md)',
+          overflow: 'hidden',
+          boxShadow: 'var(--shadow-lg)',
+          backgroundColor: 'var(--color-neutral-50)',
+        }}
+      >
+        {cells}
+      </div>
+      <MoveAnimationLayer
+        animation={pendingAnimation}
+        boardRef={boardRef}
+        onComplete={onAnimationComplete}
+      />
     </div>
   );
 }

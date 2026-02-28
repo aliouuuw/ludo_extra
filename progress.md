@@ -485,6 +485,46 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### board-03 — Design Gate
+
+**User mental model:** When I move a token, I see it slide to its new square — I don't wonder "did that work?" A captured token visibly pops/fades away. Finishing a token at home has a small pulse so it feels rewarding.
+
+**New components:** `MoveAnimationLayer` (composite)
+**Existing components extended:** `Board` — added `pendingAnimation` + `onAnimationComplete` props; `boardRef` for pixel measurement
+**States documented:** yes — idle (no animation), moving (token clone slides), capture (flash-out), arrive-home (pulse)
+**Hierarchy decision:** `MoveAnimationLayer` is an absolute overlay; `Board` grid remains primary
+**Design system gaps flagged:** none — transform/opacity only; durations from `--motion-entrance-ms` / `--motion-state-ms`
+**Assumptions flagged:** animation driven by `PendingAnimation` prop from parent; board container measured via `getBoundingClientRect`; fallback `setTimeout(400ms)` ensures `onComplete` fires even if `transitionend` is swallowed
+**Gate status:** Ready
+
+---
+
+### 2025-02-28 — board-03: Add token movement animations and capture effects
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/components/composites/MoveAnimationLayer.tsx` — absolute overlay with sliding token clone; CSS keyframes injected once via `<style>` tag; `PendingAnimation` descriptor type
+- `Board` updated: `boardRef` attached to grid div, `pendingAnimation` + `onAnimationComplete` props wired to overlay
+- `MoveAnimationLayer`, `PendingAnimation`, `AnimationType` added to `composites/index.ts`
+
+**Design decisions:**
+- CSS keyframes (`ludo-capture-flash`, `ludo-home-pulse`) injected into `document.head` once on mount — avoids styled-components/emotion dep, works with plain CSS variables
+- `@media (prefers-reduced-motion: reduce)` variant: capture = instant fade only, home pulse = no-op — satisfies AC2
+- `transitionend`/`animationend` + 400ms fallback `setTimeout` — `onComplete` always fires even if event is swallowed (e.g. tab hidden)
+- Token clone is absolutely positioned using pixel coords derived from `getBoundingClientRect` + `col/row × cellSize` — decoupled from grid layout changes
+- Move animation starts at `from` coord, transitions to `to` coord via CSS `transition: transform`; capture/home-arrival use `animation` property (keyframes)
+
+**ACs verified:**
+- Given committed move, token transitions between squares via transform ✅
+- Given `prefers-reduced-motion`, animations minimized (opacity-only capture, no pulse) ✅
+- Given capture, clear flash effect plays; 400ms max before input unblocked ✅
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
 ### 2025-02-28 — engine-10: Implement game state persistence (save/load via localStorage)
 
 **Status:** Complete
