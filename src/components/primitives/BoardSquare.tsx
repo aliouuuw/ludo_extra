@@ -19,6 +19,7 @@ interface BoardSquareProps {
   row: number;
   isSafe?: boolean;
   playerColor?: PlayerColor | null;
+  showMarker?: boolean;
   isCenterHome?: boolean;
   children?: React.ReactNode;
 }
@@ -42,6 +43,7 @@ export function BoardSquare({
   row,
   isSafe = false,
   playerColor = null,
+  showMarker = false,
   isCenterHome = false,
   children,
 }: BoardSquareProps) {
@@ -68,7 +70,7 @@ export function BoardSquare({
       aria-label={
         isCenterHome
           ? 'Centre'
-          : playerColor
+          : showMarker && playerColor
           ? `Case départ ${playerColor}`
           : isSafe
           ? 'Case sûre'
@@ -88,7 +90,7 @@ export function BoardSquare({
           ★
         </span>
       )}
-      {playerColor && !isCenterHome && (
+      {showMarker && playerColor && !isCenterHome && (
         <span
           aria-hidden="true"
           style={{

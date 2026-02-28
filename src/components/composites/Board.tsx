@@ -219,6 +219,7 @@ export function Board({
       const isSafe = onCommonPath && isFixedSafeSquare(squareIndex);
       const homeColColor = homeColumnCellColor.get(coordKey) ?? null;
       const squarePlayerColor = onCommonPath ? getSquareColor(squareIndex) : homeColColor;
+      const showMarker = onCommonPath && startingSquares.has(squareIndex);
 
       cells.push(
         <BoardSquare
@@ -227,6 +228,7 @@ export function Board({
           row={row}
           isSafe={isSafe}
           playerColor={squarePlayerColor}
+          showMarker={showMarker}
         >
           {tokensHere.map((token) => (
             <TokenPiece
