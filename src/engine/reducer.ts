@@ -245,21 +245,24 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
     });
   }
 
-  // PRE-SELECTION: If player pre-selected a token and it's valid for this roll, auto-select it
+  // PRE-SELECTION: If player pre-selected a token and it's valid for this roll, auto-execute it
   if (state.turn.preSelectedTokenId && selectableTokenIds.includes(state.turn.preSelectedTokenId)) {
-    return ok({
+    // Temporarily set up the state for commit
+    const tempState = {
       ...state,
       turn: {
         ...state.turn,
-        phase: 'AWAITING_COMMIT',
         diceResult: roll,
         consecutiveSixes: newConsecutiveSixes,
         bonusRollsRemaining: state.turn.bonusRollsRemaining + bonusRollsFromDice(roll),
         selectedTokenId: state.turn.preSelectedTokenId,
         validMoveTokenIds: selectableTokenIds,
-        preSelectedTokenId: null, // Clear pre-selection after use
+        preSelectedTokenId: null,
       },
-    });
+    };
+    
+    // Execute the move immediately (auto-commit)
+    return handleCommitMoveWithToken(tempState, state.turn.preSelectedTokenId);
   }
 
   // AUTO-SELECT: Only one valid move and no ransom retrieval - auto-select it

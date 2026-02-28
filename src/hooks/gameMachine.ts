@@ -65,6 +65,11 @@ function commitMove(ctx: GameMachineContext): GameState {
   return result.state;
 }
 
+function canCommitMove(ctx: GameMachineContext): boolean {
+  const result = applyAction(ctx.gameState, { type: 'COMMIT_MOVE' });
+  return result.ok;
+}
+
 // ─── Auto-commit delay in ms ───────────────────────────────────────────────────
 // Long enough for the player to see the dice face, short enough to feel snappy.
 const AUTO_COMMIT_DELAY_MS = 400;
@@ -164,16 +169,28 @@ export const gameMachine = setup({
         // Also accepts manual COMMIT_MOVE in case the user clicks fast.
         autoCommitting: {
           on: {
-            COMMIT_MOVE: {
-              target: 'committing',
-              actions: assign(({ context }) => ({
-                gameState: commitMove(context),
-                error: null,
-              })),
-            },
+            COMMIT_MOVE: [
+              {
+                guard: ({ context }) => canCommitMove(context),
+                target: 'committing',
+                actions: assign(({ context }) => ({
+                  gameState: commitMove(context),
+                  error: null,
+                })),
+              },
+              {
+                actions: assign(({ context }) => {
+                  const result = applyAction(context.gameState, {
+                    type: 'COMMIT_MOVE',
+                  });
+                  return { error: result.ok ? null : result.message };
+                }),
+              },
+            ],
           },
           after: {
             [AUTO_COMMIT_DELAY_MS]: {
+              guard: ({ context }) => canCommitMove(context),
               target: 'committing',
               actions: assign(({ context }) => ({
                 gameState: commitMove(context),
@@ -208,13 +225,24 @@ export const gameMachine = setup({
         // ── User must click "Confirmer" (or deselect) ──────────────────────
         awaitingCommit: {
           on: {
-            COMMIT_MOVE: {
-              target: 'committing',
-              actions: assign(({ context }) => ({
-                gameState: commitMove(context),
-                error: null,
-              })),
-            },
+            COMMIT_MOVE: [
+              {
+                guard: ({ context }) => canCommitMove(context),
+                target: 'committing',
+                actions: assign(({ context }) => ({
+                  gameState: commitMove(context),
+                  error: null,
+                })),
+              },
+              {
+                actions: assign(({ context }) => {
+                  const result = applyAction(context.gameState, {
+                    type: 'COMMIT_MOVE',
+                  });
+                  return { error: result.ok ? null : result.message };
+                }),
+              },
+            ],
             DESELECT_TOKEN: {
               target: 'awaitingMove',
             },
