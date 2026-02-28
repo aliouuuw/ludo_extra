@@ -386,3 +386,32 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-09: Implement rule variants (double-block, no-bonus-6, three-6s-penalty, quick-start)
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/rule-variants.ts` — `isSquareBlockedByDoubleBlock`, `applyThreeSixesPenalty`, `filterDoubleBlockedTokens`
+- Integrated into `reducer.ts`: `threeSesPenalty` applied on canceled roll, `doubleBlock` filtering applied before Extra Mode augmentation
+- `rule-variants.ts` added to barrel export
+
+**Variants coverage:**
+- **`noBonusSix`**: already handled in `dice.ts` `rollDice` (`bonusGranted = false` when enabled) — no new code needed
+- **`quickStart`**: handled in `state.ts` `createInitialState` (tokens placed at `STARTING_SQUARE` instead of `start`) — no new code needed
+- **`doubleBlock`**: `isSquareBlockedByDoubleBlock` checks for 2+ opponent tokens at destination; `filterDoubleBlockedTokens` removes blocked tokens from selectable list in reducer
+- **`threeSesPenalty`**: `applyThreeSixesPenalty` sends last-moved token to start on canceled roll; called in `handleRollDice` before turn advance
+
+**Design decisions:**
+- `filterDoubleBlockedTokens` takes a pre-computed `destinationMap` (tokenId → board square) to avoid re-running `computeDestination` — keeps the function pure and cheap to call
+- `threeSesPenalty` uses `lastMoveLogTokenId` (most recent move log entry) as the "last moved token" — consistent with the spec's intent and avoids any ambiguity
+- `doubleBlock` filtering is applied before Extra Mode augmentation so home-column-exit tokens are not accidentally blocked
+
+**Assumptions made:**
+- `doubleBlock` only applies to the common board path (not home columns) — consistent with standard Ludo double-block rules
+- `threeSesPenalty` applies to the token most recently moved by the active player; if no moves were made yet (first roll of game), no penalty token
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+

@@ -22,6 +22,7 @@ import type {
 } from './types';
 import { assertValidState } from './invariants';
 import { applyWinDetection } from './win';
+import { applyThreeSixesPenalty, filterDoubleBlockedTokens } from './rule-variants';
 import type { Rng } from './dice';
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -75,11 +76,20 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
   const roll = rollDice(rng, state.turn.consecutiveSixes, state.rules);
   const newConsecutiveSixes = updateConsecutiveSixes(state.turn.consecutiveSixes, roll);
 
-  // Canceled roll (3rd consecutive 6): turn ends immediately
+  // Canceled roll (3rd consecutive 6): turn ends, apply penalty if enabled
   if (roll.canceled) {
-    const nextPlayerId = getNextPlayerId(state);
+    const lastTokenId = state.moveLog.length > 0
+      ? state.moveLog[state.moveLog.length - 1].tokenId
+      : null;
+
+    const penalizedPlayers = state.rules.threeSesPenalty
+      ? applyThreeSixesPenalty(getActivePlayer(state), lastTokenId, state.players)
+      : state.players;
+
+    const nextPlayerId = getNextPlayerId({ ...state, players: penalizedPlayers });
     return ok({
       ...state,
+      players: penalizedPlayers,
       turn: {
         ...state.turn,
         phase: 'AWAITING_ROLL',
@@ -101,10 +111,33 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
     state.rules.overshootBehavior
   );
 
-  // Augment for Extra Mode
+  // Build destination map for double-block filtering (board destinations only)
+  const destinationMap = new Map<string, number>();
+  for (const token of activePlayer.tokens) {
+    const dest = computeDestination(
+      token.position,
+      roll.value as DiceValue,
+      token.color,
+      state.rules.overshootBehavior
+    );
+    if (dest?.zone === 'board') {
+      destinationMap.set(token.id, dest.square);
+    }
+  }
+
+  // Filter double-blocked destinations
+  const filteredSelectable = filterDoubleBlockedTokens({
+    selectableTokenIds: baseSelectable,
+    activePlayer,
+    destinationMap,
+    allPlayers: state.players,
+    rules: state.rules,
+  });
+
+  // Augment for Extra Mode (uses double-block-filtered list as base)
   const { selectableTokenIds, ransomRetrievalAvailable } =
     augmentSelectableTokensForExtraMode({
-      baseSelectableTokenIds: baseSelectable,
+      baseSelectableTokenIds: filteredSelectable,
       activePlayer,
       roll: roll.value as DiceValue,
       prisoners: state.prisoners,

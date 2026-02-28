@@ -9,3 +9,4 @@ export * from './extra-rules';
 export * from './reducer';
 export * from './replay';
 export * from './win';
+export * from './rule-variants';
