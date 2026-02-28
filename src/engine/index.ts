@@ -8,3 +8,4 @@ export * from './capture';
 export * from './extra-rules';
 export * from './reducer';
 export * from './replay';
+export * from './win';

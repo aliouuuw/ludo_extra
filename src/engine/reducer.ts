@@ -21,6 +21,7 @@ import type {
   TokenPosition,
 } from './types';
 import { assertValidState } from './invariants';
+import { applyWinDetection } from './win';
 import type { Rng } from './dice';
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -306,8 +307,9 @@ function handleCommitMove(state: GameState): ActionResult {
     totalBonusRemaining,
   });
 
-  assertValidState(nextState);
-  return ok(nextState);
+  const { state: stateAfterWin } = applyWinDetection(nextState);
+  assertValidState(stateAfterWin);
+  return ok(stateAfterWin);
 }
 
 // ─── COMMIT_RANSOM_RETRIEVAL ──────────────────────────────────────────────────
@@ -364,8 +366,9 @@ function handleRansomRetrieval(state: GameState, tokenId: string): ActionResult 
     totalBonusRemaining,
   });
 
-  assertValidState(nextState);
-  return ok(nextState);
+  const { state: stateAfterWin } = applyWinDetection(nextState);
+  assertValidState(stateAfterWin);
+  return ok(stateAfterWin);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

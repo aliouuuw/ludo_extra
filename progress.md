@@ -360,3 +360,29 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-08: Implement win condition detection and placement tracking (1st–4th)
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/win.ts` — `hasPlayerFinished`, `applyWinDetection`, `getStandings`
+- `WinDetectionResult` interface
+- `applyWinDetection` integrated into `reducer.ts` after every `COMMIT_MOVE` and `COMMIT_RANSOM_RETRIEVAL`
+- `win.ts` added to barrel export
+
+**Design decisions:**
+- `applyWinDetection` is pure — takes state, returns new state; reducer calls it after `buildNextTurnState`
+- 2-player shortcut: when first player finishes, second is immediately assigned 2nd place and game ends — satisfies AC3
+- "Last player standing" rule: when only 1 unfinished player remains in any player count, they are auto-assigned last place — prevents games that never end
+- `turn.phase` set to `'GAME_OVER'` when `status === 'game_over'` so the reducer's top-level guard catches all subsequent actions
+- `getStandings` sorts placed players by rank, then unfinished players by tokens-home count — ready for HUD display
+
+**Assumptions made:**
+- Simultaneous finishes (two players getting last token home in the same action) are not possible since only one token moves per action; `applyWinDetection` processes one finish at a time
+- `placements` array order is authoritative; `player.placement` field is a convenience index
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+

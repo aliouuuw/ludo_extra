@@ -1055,7 +1055,9 @@
       "out_of_scope": ["Recap UI", "Points calculation"],
       "definition_of_done": ["All acceptance criteria met", "Type-check passes (tsc --noEmit)", "progress.md updated"],
       "dependencies": ["engine-06"],
-      "design_gate_required": false
+      "design_gate_required": false,
+      "status": "completed",
+      "completed_date": "2025-02-28"
     },
     {
       "id": "engine-09",
