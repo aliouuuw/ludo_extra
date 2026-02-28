@@ -559,12 +559,14 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 **Time:** ~1 cycle
 
 **What was built:**
-- Fixed home column coordinates in `src/engine/board.ts` to match the actual entry squares for all players:
-  - Red: Enters via col 2, row 8 -> Home col is row 7 (cols 1-5)
-  - Yellow: Enters via col 8, row 0 -> Home col is col 7 (rows 1-5)
-  - Green: Enters via col 14, row 7 -> Home col is row 7 (cols 13-9)
-  - Blue: Enters via col 8, row 14 -> Home col is col 7 (rows 13-9)
-- Verified the coordinates point correctly toward the center (7, 7).
+- Fixed `HOME_COLUMN_COORDS` in `src/engine/board.ts` — previous values had index 4 two cells from center (7,7); corrected so index 4 is always adjacent to center:
+  - Red: sq 51 at (2,8) → home col row 7, cols 2→6 (index 4 at (6,7))
+  - Yellow: sq 12 at (7,0) → home col col 7, rows 2→6 (index 4 at (7,6))
+  - Green: sq 25 at (14,6) → home col row 7, cols 12→8 (index 4 at (8,7))
+  - Blue: sq 38 at (8,13) → home col col 7, rows 12→8 (index 4 at (7,8))
+- Added home column cell tinting in `Board.tsx` — `homeColumnCellColor` lookup map + `getHomeColumnCoords` import so home column squares render with their player's color instead of neutral gray
+
+**Root cause:** Original home columns used cols/rows 1→5 or 13→9 (5 squares), leaving a 2-cell gap between index 4 and center. Shifted to 2→6 / 12→8 so each 5-square column ends 1 cell from center.
 
 **Type-check:** ✅ Pass (tsc --noEmit, exit 0)
 

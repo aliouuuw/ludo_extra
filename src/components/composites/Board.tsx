@@ -14,7 +14,7 @@
  */
 
 import React, { useMemo, useRef } from 'react';
-import { getRenderCoord, validateBoardMapping, getCommonPath, isFixedSafeSquare, getSquareColor, CENTER_HOME_COORD } from '../../engine/board';
+import { getRenderCoord, validateBoardMapping, getCommonPath, getHomeColumnCoords, isFixedSafeSquare, getSquareColor, CENTER_HOME_COORD } from '../../engine/board';
 import type { GameState, PlayerColor, Token, TokenPosition } from '../../engine/types';
 import { STARTING_SQUARE } from '../../engine/constants';
 import { BoardSquare } from '../primitives/BoardSquare';
@@ -121,6 +121,17 @@ export function Board({
 
   const GRID_SIZE = 15;
 
+  // Build a lookup for home column cells: coordKey → PlayerColor
+  const homeColumnCellColor = useMemo(() => {
+    const map = new Map<string, PlayerColor>();
+    for (const color of PLAYER_COLORS) {
+      for (const coord of getHomeColumnCoords(color)) {
+        map.set(`${coord.col}:${coord.row}`, color);
+      }
+    }
+    return map;
+  }, []);
+
   // Determine which cells are "corridor" cells (not yard, not empty background)
   // Yards occupy the four 6×6 corners; corridor cells are everything else
   function isYardCell(col: number, row: number): boolean {
@@ -206,7 +217,8 @@ export function Board({
       const squareIndex = commonPath.findIndex((c) => c.col === col && c.row === row);
       const onCommonPath = squareIndex !== -1;
       const isSafe = onCommonPath && isFixedSafeSquare(squareIndex);
-      const squarePlayerColor = onCommonPath ? getSquareColor(squareIndex) : null;
+      const homeColColor = homeColumnCellColor.get(coordKey) ?? null;
+      const squarePlayerColor = onCommonPath ? getSquareColor(squareIndex) : homeColColor;
 
       cells.push(
         <BoardSquare

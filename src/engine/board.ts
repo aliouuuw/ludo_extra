@@ -130,53 +130,41 @@ const COMMON_PATH_COORDS: readonly RenderCoord[] = [
  * Index 4 leads to the center home.
  */
 const HOME_COLUMN_COORDS: Record<PlayerColor, readonly RenderCoord[]> = {
-  // Red enters from sq 51 (col:2,row:8) -> actually sq 51 is { col: 2, row: 8 }
-  // Wait, let's look at the common path coordinates.
-  // Red sq 51: { col: 2,  row: 8  }
-  // Home col should be row 7, going from col 1 to col 5?
-  // Red entry square is 51. The next square is home column 0.
-  // Actually, sq 51 is the LAST square before entering home column.
-  // Let's re-read the coordinates.
-  // Red starts at 0 ({ col: 1, row: 6 }).
-  // Yellow starts at 13 ({ col: 8, row: 0 }).
-  // Green starts at 26 ({ col: 14, row: 7 }).
-  // Blue starts at 39 ({ col: 8, row: 14 }).
-  
-  // The home columns in a 15x15 Ludo board:
-  // Center is (7, 7).
-  // Red home column (left arm): cols 1,2,3,4,5 on row 7.
-  // Yellow home column (top arm): rows 1,2,3,4,5 on col 7.
-  // Green home column (right arm): cols 13,12,11,10,9 on row 7.
-  // Blue home column (bottom arm): rows 13,12,11,10,9 on col 7.
-  
-  // Let's ensure these are the coords.
+  // Red: last common sq 51 at (2,8). Home col runs RIGHT along row 7: cols 2→6
+  // Index 4 at (6,7) is adjacent to center (7,7)
   red: [
-    { col: 1, row: 7 },
-    { col: 2, row: 7 },
+    { col: 2, row: 7 }, // index 0 — first home column square
     { col: 3, row: 7 },
     { col: 4, row: 7 },
     { col: 5, row: 7 },
+    { col: 6, row: 7 }, // index 4 — adjacent to center
   ],
+  // Yellow: last common sq 12 at (7,0). Home col runs DOWN col 7: rows 2→6
+  // Index 4 at (7,6) is adjacent to center (7,7)
   yellow: [
-    { col: 7, row: 1 },
-    { col: 7, row: 2 },
+    { col: 7, row: 2 }, // index 0
     { col: 7, row: 3 },
     { col: 7, row: 4 },
     { col: 7, row: 5 },
+    { col: 7, row: 6 }, // index 4
   ],
+  // Green: last common sq 25 at (14,6). Home col runs LEFT along row 7: cols 12→8
+  // Index 4 at (8,7) is adjacent to center (7,7)
   green: [
-    { col: 13, row: 7 },
-    { col: 12, row: 7 },
+    { col: 12, row: 7 }, // index 0
     { col: 11, row: 7 },
     { col: 10, row: 7 },
     { col: 9,  row: 7 },
+    { col: 8,  row: 7 }, // index 4
   ],
+  // Blue: last common sq 38 at (8,13). Home col runs UP col 7: rows 12→8
+  // Index 4 at (7,8) is adjacent to center (7,7)
   blue: [
-    { col: 7, row: 13 },
-    { col: 7, row: 12 },
+    { col: 7, row: 12 }, // index 0
     { col: 7, row: 11 },
     { col: 7, row: 10 },
     { col: 7, row: 9  },
+    { col: 7, row: 8  }, // index 4
   ],
 } as const;
 
