@@ -130,41 +130,53 @@ const COMMON_PATH_COORDS: readonly RenderCoord[] = [
  * Index 4 leads to the center home.
  */
 const HOME_COLUMN_COORDS: Record<PlayerColor, readonly RenderCoord[]> = {
-  // Red approaches from sq 50 (col:3,row:8) going left along row 8, enters home col via row 7
-  // Home col runs RIGHT along row 7: cols 1→5 toward center (7,7)
+  // Red enters from sq 51 (col:2,row:8) -> actually sq 51 is { col: 2, row: 8 }
+  // Wait, let's look at the common path coordinates.
+  // Red sq 51: { col: 2,  row: 8  }
+  // Home col should be row 7, going from col 1 to col 5?
+  // Red entry square is 51. The next square is home column 0.
+  // Actually, sq 51 is the LAST square before entering home column.
+  // Let's re-read the coordinates.
+  // Red starts at 0 ({ col: 1, row: 6 }).
+  // Yellow starts at 13 ({ col: 8, row: 0 }).
+  // Green starts at 26 ({ col: 14, row: 7 }).
+  // Blue starts at 39 ({ col: 8, row: 14 }).
+  
+  // The home columns in a 15x15 Ludo board:
+  // Center is (7, 7).
+  // Red home column (left arm): cols 1,2,3,4,5 on row 7.
+  // Yellow home column (top arm): rows 1,2,3,4,5 on col 7.
+  // Green home column (right arm): cols 13,12,11,10,9 on row 7.
+  // Blue home column (bottom arm): rows 13,12,11,10,9 on col 7.
+  
+  // Let's ensure these are the coords.
   red: [
-    { col: 1, row: 7 }, // index 0 — first home column square
+    { col: 1, row: 7 },
     { col: 2, row: 7 },
     { col: 3, row: 7 },
     { col: 4, row: 7 },
-    { col: 5, row: 7 }, // index 4 — adjacent to center
+    { col: 5, row: 7 },
   ],
-  // Yellow approaches from sq 11 (col:6,row:0) going up, enters home col
-  // Home col runs DOWN col 7: rows 1→5 toward center
   yellow: [
-    { col: 7, row: 1 }, // index 0
+    { col: 7, row: 1 },
     { col: 7, row: 2 },
     { col: 7, row: 3 },
     { col: 7, row: 4 },
-    { col: 7, row: 5 }, // index 4
+    { col: 7, row: 5 },
   ],
-  // Green approaches from sq 24 (col:13,row:6) going right, enters home col
-  // Home col runs LEFT along row 7: cols 13→9 toward center
   green: [
-    { col: 13, row: 7 }, // index 0
+    { col: 13, row: 7 },
     { col: 12, row: 7 },
     { col: 11, row: 7 },
     { col: 10, row: 7 },
-    { col: 9,  row: 7 }, // index 4
+    { col: 9,  row: 7 },
   ],
-  // Blue approaches from sq 37 (col:8,row:12) going down, enters home col
-  // Home col runs UP col 7: rows 13→9 toward center
   blue: [
-    { col: 7, row: 13 }, // index 0
+    { col: 7, row: 13 },
     { col: 7, row: 12 },
     { col: 7, row: 11 },
     { col: 7, row: 10 },
-    { col: 7, row: 9  }, // index 4
+    { col: 7, row: 9  },
   ],
 } as const;
 
