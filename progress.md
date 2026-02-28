@@ -204,3 +204,26 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-02: Implement deterministic dice roll and bonus-roll rules
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/dice.ts` — `createRng` (Mulberry32 seeded RNG), `rollDice`, `updateConsecutiveSixes`, `bonusRollsFromDice`
+- `Rng` interface with `next()` and `state()` for snapshot/replay support
+- `dice.ts` added to barrel export in `index.ts`
+
+**Design decisions:**
+- Mulberry32 chosen: fast, seedable, 32-bit, no external deps — ideal for deterministic replay
+- `rollDice` encodes both the third-6 cancellation and `noBonusSix` rule in one place — single source of truth
+- `rngSnapshot` captures the RNG state *before* the roll so a replay can fast-forward to any point without re-running from the start
+- `updateConsecutiveSixes` takes prior count explicitly to keep the function pure (no hidden state)
+
+**Assumptions made:**
+- Replay reconstruction re-seeds the RNG from `metadata.seed` and replays the action log; individual `rngSnapshot` values are checkpoints for debugging, not required for full replay
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
