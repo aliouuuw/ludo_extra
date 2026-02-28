@@ -1,0 +1,1022 @@
+{
+  "project": {
+    "name": "Ludo Extra",
+    "description": "A browser-playable Ludo game where the default ruleset is Ludo Extra Mode (aggressive/competitive) with Classic Ludo available as a chill optional ruleset.",
+    "default_ruleset": "extra",
+    "players_supported": [2, 3, 4]
+  },
+  "assumptions": [
+    "Initial milestone is offline/local play in a single browser session (no server-authoritative multiplayer yet).",
+    "Deterministic game logic is required early to support replays and later online validation.",
+    "Territory Captures, Ransom, and Home Column Exit are runtime toggles per match.",
+    "Default Extra Mode: Territory Captures ON, Safe squares lose immunity when Territory Captures is ON.",
+    "Overshooting into center home: token stays (does not move backward).",
+    "Ransom OFF behavior: captured token returns immediately to start (classic)."
+  ],
+  "tasks": [
+    {
+      "id": "foundation-01",
+      "title": "Bootstrap design system tokens and copy constants",
+      "priority": 1,
+      "type": "non-ui",
+      "epic": "foundation",
+      "persona": "Player",
+      "user_story": "As a player, I want consistent design tokens and shared copy so that the UI feels cohesive and changes are easy to maintain.",
+      "description": "Create the initial token file and the copy constants entrypoint required by UI components.",
+      "acceptance_criteria": [
+        "Given the repo, when I inspect the codebase, then src/styles/tokens.css exists and defines spacing, typography, color, motion, shadow, radius, and breakpoint variables.",
+        "Given the repo, when I inspect the codebase, then src/copy/index.ts exists and exports ERRORS, LABELS, EMPTY_STATES, and NOTIFICATIONS.",
+        "Given the project, when I run TypeScript type-check, then it completes without errors."
+      ],
+      "out_of_scope": [
+        "Building feature screens",
+        "Adding icons/assets"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": [],
+      "design_gate_required": false
+    },
+    {
+      "id": "foundation-01b",
+      "title": "Create UI primitives (Button, Text, IconButton) and wire tokens",
+      "priority": 2,
+      "type": "ui",
+      "epic": "foundation",
+      "persona": "Player",
+      "user_story": "As a player, I want consistent base components so that every interaction feels predictable and accessible.",
+      "description": "Introduce the smallest set of primitives needed to build the game UI without duplicating styles across screens.",
+      "components_expected": [
+        "Button",
+        "IconButton",
+        "Text"
+      ],
+      "states_required": {
+        "empty": "N/A",
+        "loading": "Buttons support loading state",
+        "error": "N/A",
+        "success": "N/A"
+      },
+      "screen_hierarchy": {
+        "primary_element": "N/A",
+        "secondary_elements": [],
+        "supporting_elements": []
+      },
+      "acceptance_criteria": [
+        "Given Button, when it is focused via keyboard, then a visible focus state is shown.",
+        "Given Button, when isLoading=true, then it is disabled and shows a loading affordance.",
+        "Given Text, when rendered with each scale size, then it matches the typography scale tokens.",
+        "Given the design system rules, when I inspect styles, then spacing and colors come from tokens (no raw values in components)."
+      ],
+      "out_of_scope": [
+        "Building the board",
+        "Implementing game logic"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "UI states implemented (default/hover/active/focus/disabled/loading where applicable)",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["foundation-01"],
+      "design_gate_required": true
+    },
+    {
+      "id": "foundation-01c",
+      "title": "Create composite UI components (Card/Panel, Modal, Tooltip)",
+      "priority": 3,
+      "type": "ui",
+      "epic": "foundation",
+      "persona": "Player",
+      "user_story": "As a player, I want reusable layout and overlay components so that screens are consistent and quick to build.",
+      "description": "Build a small set of composite components required by game settings, help, and recap flows.",
+      "components_expected": [
+        "Card",
+        "Modal",
+        "Tooltip"
+      ],
+      "states_required": {
+        "empty": "N/A",
+        "loading": "N/A",
+        "error": "N/A",
+        "success": "N/A"
+      },
+      "screen_hierarchy": {
+        "primary_element": "N/A",
+        "secondary_elements": [],
+        "supporting_elements": []
+      },
+      "acceptance_criteria": [
+        "Given Modal, when opened, then focus is trapped and Escape closes it.",
+        "Given Tooltip, when triggered by keyboard focus, then it appears and is readable by screen readers.",
+        "Given Card, when rendered, then it uses the shadow and radius token scales (no custom values)."
+      ],
+      "out_of_scope": [
+        "Feature screens"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Accessibility floor met (keyboard + focus states)",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["foundation-01b"],
+      "design_gate_required": true
+    },
+    {
+      "id": "foundation-02",
+      "title": "Build shared pattern components (EmptyState, ErrorState, LoadingState, ConfirmDialog, Toast)",
+      "priority": 4,
+      "type": "ui",
+      "epic": "foundation",
+      "persona": "Player",
+      "user_story": "As a player, I want clear loading/error/empty states so that the product always communicates what is happening and what I can do next.",
+      "description": "Create shared pattern components that all features will reuse.",
+      "components_expected": [
+        "EmptyState",
+        "ErrorState",
+        "LoadingState",
+        "ConfirmDialog",
+        "Toast"
+      ],
+      "states_required": {
+        "empty": "N/A — these ARE the state components",
+        "loading": "N/A",
+        "error": "N/A",
+        "success": "N/A"
+      },
+      "screen_hierarchy": {
+        "primary_element": "N/A",
+        "secondary_elements": [],
+        "supporting_elements": []
+      },
+      "acceptance_criteria": [
+        "Given EmptyState, when action props are provided, then a CTA is rendered and keyboard-accessible.",
+        "Given ErrorState, when onRetry is provided, then retry is available and clearly labeled.",
+        "Given LoadingState, when shape variants are used, then skeletons match the loaded content shape.",
+        "Given ConfirmDialog, when variant=destructive, then destructive intent is visually and textually communicated.",
+        "Given Toast, when shown, then it supports success|error|warning|info variants and auto-dismisses after a duration."
+      ],
+      "out_of_scope": [
+        "Building domain feature UI"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "UI QA checklist passed (UI tasks)",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["foundation-01c"],
+      "design_gate_required": true
+    },
+    {
+      "id": "foundation-03",
+      "title": "Setup PWA manifest and service worker scaffolding",
+      "priority": 5,
+      "type": "non-ui",
+      "epic": "foundation",
+      "persona": "Player",
+      "user_story": "As a player, I want to install the game to my homescreen so that it feels like a native app and works offline.",
+      "description": "Create PWA manifest.json with app metadata, icons, theme colors. Setup service worker registration scaffold (implementation in later task). Configure vite-pwa-plugin or equivalent.",
+      "acceptance_criteria": [
+        "Given the app, when inspected, then manifest.json is valid and contains required fields (name, short_name, icons, theme_color, background_color).",
+        "Given the app, when loaded, then service worker registers without errors.",
+        "Given Lighthouse audit, when run, then PWA category scores > 90."
+      ],
+      "out_of_scope": [
+        "Offline game logic",
+        "Push notifications"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["foundation-01"],
+      "design_gate_required": false
+    },
+    {
+      "id": "foundation-04",
+      "title": "Implement service worker for offline asset caching",
+      "priority": 6,
+      "type": "non-ui",
+      "epic": "foundation",
+      "persona": "Player",
+      "user_story": "As a player, I want the game to work offline after first load so that I can play without internet.",
+      "description": "Implement service worker with CacheFirst strategy for static assets (JS, CSS, images, lutteurs). Add runtime caching for game state (if applicable). Handle cache updates on new deployments.",
+      "acceptance_criteria": [
+        "Given first visit, when assets load, then they are cached for offline use.",
+        "Given offline mode, when revisiting, then core game UI renders without network.",
+        "Given new deployment, when user revisits, then cache updates automatically (or prompts for refresh).",
+        "Given lutteurs images, when offline, then they are available from cache."
+      ],
+      "out_of_scope": [
+        "Online multiplayer offline mode",
+        "Push notifications"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["foundation-03"],
+      "design_gate_required": false
+    },
+    {
+      "id": "engine-01",
+      "title": "Define game state model and invariants for Classic + Extra rules",
+      "priority": 5,
+      "type": "non-ui",
+      "epic": "game-engine",
+      "persona": "Player",
+      "user_story": "As a player, I want the game to behave consistently so that outcomes are fair and predictable.",
+      "description": "Define TypeScript types for players, tokens, positions, dice history, move history, prisoners (ransom), rule toggles, and turn state. Document invariants in code via types and runtime checks.",
+      "acceptance_criteria": [
+        "Given a new match, when initialized, then the state includes players, tokens, activePlayerId, rule toggles, and a move log.",
+        "Given token positions, when invalid (e.g., two colors stacked together), then validation fails.",
+        "Given Extra Mode toggles, when disabled, then state does not include ransom prison data (or it is always empty)."
+      ],
+      "out_of_scope": [
+        "Rendering the board"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["foundation-01"],
+      "design_gate_required": false
+    },
+    {
+      "id": "engine-02",
+      "title": "Implement deterministic dice roll and bonus-roll rules",
+      "priority": 6,
+      "type": "non-ui",
+      "epic": "game-engine",
+      "persona": "Player",
+      "user_story": "As a player, I want dice rolls and bonus turns to follow the rules so that the game is fair.",
+      "description": "Implement dice roll generation (seedable for replays) and apply rules: roll 6 grants extra roll, max 3 consecutive 6s with third canceled.",
+      "acceptance_criteria": [
+        "Given a seeded RNG, when rolling dice N times, then the sequence is reproducible.",
+        "Given two consecutive 6s, when the next roll is 6, then the third 6 is canceled per rules.",
+        "Given a non-6 roll, when applied, then the bonus roll queue is cleared."
+      ],
+      "out_of_scope": [
+        "UI dice animation"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["engine-01"],
+      "design_gate_required": false
+    },
+    {
+      "id": "engine-03",
+      "title": "Implement movement and path validation (Classic rules)",
+      "priority": 7,
+      "type": "non-ui",
+      "epic": "game-engine",
+      "persona": "Player",
+      "user_story": "As a player, I want token movement to always be legal so that the game cannot enter invalid states.",
+      "description": "Implement movement rules: starting a token only on 6, clockwise movement on common path, entering home column on completing loop, exact landing into center home.",
+      "acceptance_criteria": [
+        "Given a token in start, when roll != 6, then no start move is generated.",
+        "Given a token at home-entry boundary, when it completes a loop, then it transitions into its home column.",
+        "Given a token inside the home column, when roll overshoots the center, then the configured variant behavior applies (stay vs move backward)."
+      ],
+      "out_of_scope": [
+        "Extra mode territory capture",
+        "Stacks",
+        "Ransom"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["engine-02"],
+      "design_gate_required": false
+    },
+    {
+      "id": "engine-04",
+      "title": "Implement capturing and safe-zone behavior (Classic + toggle for territory captures)",
+      "priority": 8,
+      "type": "non-ui",
+      "epic": "game-engine",
+      "persona": "Player",
+      "user_story": "As a player, I want captures and safe squares to work correctly so that strategy is meaningful.",
+      "description": "Implement capture resolution (exact landing) and safe zone logic. When Territory Captures is ON, safe squares lose immunity.",
+      "acceptance_criteria": [
+        "Given a move landing on an opponent token, when safe-zone immunity applies, then capture does not occur.",
+        "Given Territory Captures enabled, when landing on an opponent token on a safe square, then capture occurs.",
+        "Given a capture, when resolved, then the capturing player receives a bonus roll."
+      ],
+      "out_of_scope": [
+        "Stacks and ransom"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["engine-03"],
+      "design_gate_required": false
+    },
+    {
+      "id": "engine-05",
+      "title": "Implement Extra Mode advanced rules (territory captures, stacking, ransom, home-column exit)",
+      "priority": 9,
+      "type": "non-ui",
+      "epic": "game-engine",
+      "persona": "Player",
+      "user_story": "As a competitive player, I want Extra Mode mechanics so that the game is more aggressive and strategic.",
+      "description": "Implement: captures inside home columns (territory captures), stack formation and capture-as-a-unit, ransom prisoner lifecycle, and home column exit on 6.",
+      "acceptance_criteria": [
+        "Given a stack (2+ same-color tokens), when an opponent lands exactly on the square, then all tokens in the stack are captured together.",
+        "Given Ransom enabled, when a capture occurs, then the token becomes a prisoner instead of immediately returning to start.",
+        "Given a player rolls 6 with prisoners, when they choose retrieval, then exactly one prisoner is returned according to the rules.",
+        "Given a token in its home column, when roll=6 and home-column exit is enabled, then the token exits to the home-column entry square."
+      ],
+      "out_of_scope": [
+        "Perks/power-ups",
+        "Online anti-cheat"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["engine-04"],
+      "design_gate_required": false
+    },
+    {
+      "id": "engine-06",
+      "title": "Create turn reducer and action processing (server-authoritative ready)",
+      "priority": 10,
+      "type": "non-ui",
+      "epic": "game-engine",
+      "persona": "Player",
+      "user_story": "As a player, I want the game to accept only valid actions so that cheating and desync are prevented.",
+      "description": "Implement an action-based reducer: RollDice, SelectToken, CommitMove, ToggleRules (pre-match only), etc. The reducer must validate and produce deterministic next state.",
+      "acceptance_criteria": [
+        "Given an invalid action, when applied, then it is rejected with a clear error code.",
+        "Given valid actions, when applied, then the resulting state matches the rules engine outputs.",
+        "Given the same initial state + actions, when replayed, then the final state is identical."
+      ],
+      "out_of_scope": [
+        "Networking"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["engine-05"],
+      "design_gate_required": false
+    },
+    {
+      "id": "engine-07",
+      "title": "Define replay and move log format and implement serialization",
+      "priority": 11,
+      "type": "non-ui",
+      "epic": "game-engine",
+      "persona": "Player",
+      "user_story": "As a player, I want replays so that I can review key moments and share matches later.",
+      "description": "Define a replay format (seed + action list + metadata) and implement serialization/deserialization.",
+      "acceptance_criteria": [
+        "Given a finished game, when exporting replay, then it includes initial seed and action list.",
+        "Given an exported replay, when importing, then the game can be reconstructed deterministically.",
+        "Given an imported replay, when validated, then invalid action sequences are rejected."
+      ],
+      "out_of_scope": [
+        "Replay viewer UI"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["engine-06"],
+      "design_gate_required": false
+    },
+    {
+      "id": "board-01",
+      "title": "Define board coordinate system and path mapping",
+      "priority": 12,
+      "type": "non-ui",
+      "epic": "board-visuals",
+      "persona": "Player",
+      "user_story": "As a player, I want tokens to move along the correct path so that the board representation matches the rules.",
+      "description": "Create a canonical mapping for: 52 common squares, 4 starting squares, home columns, and center home. Provide helpers to convert logical positions to render coordinates.",
+      "acceptance_criteria": [
+        "Given a token logical position, when mapped, then a stable render coordinate is produced.",
+        "Given each color, when mapping home column squares, then indices are consistent (0..4).",
+        "Given a full loop, when enumerating path squares, then it contains exactly 52 unique common squares."
+      ],
+      "out_of_scope": [
+        "Board rendering"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["engine-01"],
+      "design_gate_required": false
+    },
+    {
+      "id": "board-02",
+      "title": "Build interactive board UI (render board, tokens, safe squares)",
+      "priority": 13,
+      "type": "ui",
+      "epic": "board-visuals",
+      "persona": "Player",
+      "user_story": "As a player, I want to see and interact with the board so that I can play the game.",
+      "description": "Create the core Board component that renders the cross-shaped layout with quadrants, tokens, safe squares visuals, and basic hit targets.",
+      "components_expected": [
+        "Board",
+        "BoardSquare",
+        "Token"
+      ],
+      "states_required": {
+        "empty": "Pre-game board with tokens in home/start areas",
+        "loading": "N/A (local state)",
+        "error": "ErrorState for invalid board mapping",
+        "success": "Board renders with interactive tokens"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Board",
+        "secondary_elements": ["Dice panel", "Turn indicator"],
+        "supporting_elements": ["Move log", "Rules help"]
+      },
+      "acceptance_criteria": [
+        "Given a match state, when rendered, then all tokens appear at the correct logical squares.",
+        "Given a token, when clicked (if selectable), then it triggers selection UX (highlight/preview).",
+        "Given a responsive viewport, when resized, then the board remains usable at mobile and desktop sizes."
+      ],
+      "out_of_scope": [
+        "Animations",
+        "Threat highlights"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Empty/error states are implemented",
+        "Accessibility floor met (keyboard focus where applicable)",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["foundation-02", "board-01"],
+      "design_gate_required": true
+    },
+    {
+      "id": "board-03",
+      "title": "Add token movement animations and capture effects",
+      "priority": 14,
+      "type": "ui",
+      "epic": "board-visuals",
+      "persona": "Player",
+      "user_story": "As a player, I want animated moves so that the game feels responsive and understandable.",
+      "description": "Animate token movement (transform/opacity only). Add capture animations/effects and a subtle celebration for reaching home.",
+      "components_expected": [
+        "Token",
+        "MoveAnimationLayer"
+      ],
+      "states_required": {
+        "empty": "N/A",
+        "loading": "N/A",
+        "error": "ErrorState for animation failures (fallback to instant move)",
+        "success": "Moves are animated smoothly"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Board",
+        "secondary_elements": ["Animated token movement"],
+        "supporting_elements": []
+      },
+      "acceptance_criteria": [
+        "Given a committed move, when applied, then token transitions between squares using transform animations.",
+        "Given reduced-motion preference, when enabled, then animations are minimized or disabled.",
+        "Given a capture, when resolved, then a clear capture effect plays without blocking input longer than necessary."
+      ],
+      "out_of_scope": [
+        "Audio"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Motion rules respected (transform/opacity only)",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["board-02"],
+      "design_gate_required": true
+    },
+    {
+      "id": "board-04",
+      "title": "Implement visual hints (valid moves, threatened tokens, capture paths)",
+      "priority": 15,
+      "type": "ui",
+      "epic": "board-visuals",
+      "persona": "Player",
+      "user_story": "As a player, I want visual hints so that I can quickly understand my options and risks.",
+      "description": "Highlight valid moves for the current roll, threatened tokens that can be captured next turn, and optional capture-path previews.",
+      "components_expected": [
+        "MoveHintOverlay",
+        "ThreatIndicator"
+      ],
+      "states_required": {
+        "empty": "No valid moves available hint",
+        "loading": "N/A",
+        "error": "ErrorState if move generation fails",
+        "success": "Hints update with state"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Board",
+        "secondary_elements": ["Hint overlay"],
+        "supporting_elements": ["Tooltip explanations"]
+      },
+      "acceptance_criteria": [
+        "Given a roll, when there are valid moves, then eligible tokens/squares are highlighted.",
+        "Given there are no valid moves, when the player tries to act, then an explanation is shown.",
+        "Given opponent positions, when computing threats, then threatened tokens are indicated."
+      ],
+      "out_of_scope": [
+        "AI strategy",
+        "Online mode"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Copy is sourced from shared copy constants",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["board-02", "engine-06", "foundation-02"],
+      "design_gate_required": true
+    },
+    {
+      "id": "ui-01",
+      "title": "Build the main Game screen shell (HUD, turn indicator, move log)",
+      "priority": 16,
+      "type": "ui",
+      "epic": "game-ui",
+      "persona": "Player",
+      "user_story": "As a player, I want a clear game HUD so that I always know whose turn it is and what just happened.",
+      "description": "Assemble a Game screen with Board, player list, turn indicator, dice panel placeholder, and move history/log.",
+      "components_expected": [
+        "GameScreen",
+        "PlayerList",
+        "TurnIndicator",
+        "MoveLog"
+      ],
+      "states_required": {
+        "empty": "Pre-game state with Start Game CTA",
+        "loading": "N/A",
+        "error": "ErrorState when game state fails to initialize",
+        "success": "Full HUD + board"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Board",
+        "secondary_elements": ["Dice panel", "Turn indicator"],
+        "supporting_elements": ["Move log", "Rules tooltips"]
+      },
+      "acceptance_criteria": [
+        "Given a match, when the active player changes, then the HUD updates immediately.",
+        "Given a move, when committed, then it is appended to the move log.",
+        "Given the UI rules, when strings are shown, then they come from shared copy constants."
+      ],
+      "out_of_scope": [
+        "Dice animation",
+        "Rules settings"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "All required UI states implemented",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["board-02", "foundation-02"],
+      "design_gate_required": true
+    },
+    {
+      "id": "ui-02",
+      "title": "Implement dice roll interaction + animation + triple-6 feedback",
+      "priority": 17,
+      "type": "ui",
+      "epic": "game-ui",
+      "persona": "Player",
+      "user_story": "As a player, I want a satisfying dice roll interaction so that the game feels alive and the rules are obvious.",
+      "description": "Build a Dice component that triggers engine roll action, displays results, and communicates bonus-roll and triple-6 cancellation.",
+      "components_expected": [
+        "Dice",
+        "DiceResult"
+      ],
+      "states_required": {
+        "empty": "Dice disabled before match starts",
+        "loading": "Rolling animation",
+        "error": "Toast error for invalid roll attempt",
+        "success": "Result displayed with rule hints"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Board",
+        "secondary_elements": ["Dice"],
+        "supporting_elements": ["Move log", "Rule hint text"]
+      },
+      "acceptance_criteria": [
+        "Given it is not the player's turn, when clicking dice, then the roll action is blocked with explanation.",
+        "Given a roll of 6, when resolved, then bonus roll is indicated.",
+        "Given a third consecutive 6, when rolled, then the cancellation is clearly communicated."
+      ],
+      "out_of_scope": [
+        "Sound effects"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Animations follow motion rules",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["ui-01", "engine-02", "engine-06", "foundation-02"],
+      "design_gate_required": true
+    },
+    {
+      "id": "ui-03",
+      "title": "Implement move selection UX (token selection, preview, commit)",
+      "priority": 18,
+      "type": "ui",
+      "epic": "game-ui",
+      "persona": "Player",
+      "user_story": "As a player, I want clear move selection so that I don't make accidental moves.",
+      "description": "Allow selecting a token, previewing the destination, and committing the move. Ensure no accidental commits on touch devices.",
+      "components_expected": [
+        "MovePreview",
+        "TokenSelection"
+      ],
+      "states_required": {
+        "empty": "No selectable moves state",
+        "loading": "N/A",
+        "error": "Toast for invalid move commit",
+        "success": "Preview + commit"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Board",
+        "secondary_elements": ["Move preview"],
+        "supporting_elements": ["Toast feedback"]
+      },
+      "acceptance_criteria": [
+        "Given a roll, when selecting a token, then a preview shows the destination square.",
+        "Given multiple legal moves, when switching tokens, then preview updates.",
+        "Given a commit action, when applied, then engine-validated move is executed and logged."
+      ],
+      "out_of_scope": [
+        "Undo move"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "No useEffect-based workflow logic (use explicit state/reducer)",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["ui-02", "engine-06", "foundation-02"],
+      "design_gate_required": true
+    },
+    {
+      "id": "ui-04",
+      "title": "Build match setup + ruleset toggles (Classic vs Extra + per-rule switches)",
+      "priority": 19,
+      "type": "ui",
+      "epic": "game-ui",
+      "persona": "Player",
+      "user_story": "As a player, I want to choose Classic or Extra mode and rule toggles so that I can control the experience.",
+      "description": "Create a pre-game setup flow: player count, mode selection, and toggles (territory captures, ransom, home-column exit, overshoot behavior).",
+      "components_expected": [
+        "MatchSetupScreen",
+        "RulesetPicker",
+        "Toggle"
+      ],
+      "states_required": {
+        "empty": "No players configured",
+        "loading": "N/A",
+        "error": "Validation errors shown inline",
+        "success": "Start Game enabled"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Mode selection",
+        "secondary_elements": ["Rule toggles"],
+        "supporting_elements": ["Rule explanations"]
+      },
+      "acceptance_criteria": [
+        "Given Classic mode, when selected, then Extra-only toggles are disabled or hidden.",
+        "Given Extra mode, when selected, then territory captures, ransom, and home exit toggles are available.",
+        "Given invalid setup, when attempting to start, then the user sees exactly what to fix."
+      ],
+      "out_of_scope": [
+        "Online matchmaking"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "All data states implemented (empty/error/success)",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["foundation-02", "engine-01"],
+      "design_gate_required": true
+    },
+    {
+      "id": "ui-05",
+      "title": "Implement end-of-game recap (placements + key stats)",
+      "priority": 20,
+      "type": "ui",
+      "epic": "game-ui",
+      "persona": "Player",
+      "user_story": "As a player, I want a recap so that I can understand how the match played out.",
+      "description": "Show winner/placements and basic stats: captures, longest 6 streak, tokens finished, prisoners ransomed (if enabled).",
+      "components_expected": [
+        "GameRecapScreen",
+        "StatCard"
+      ],
+      "states_required": {
+        "empty": "N/A",
+        "loading": "N/A",
+        "error": "ErrorState if recap cannot be computed",
+        "success": "Recap displayed"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Placements",
+        "secondary_elements": ["Stats"],
+        "supporting_elements": ["Rematch CTA"]
+      },
+      "acceptance_criteria": [
+        "Given a game ends, when recap opens, then placements are correct.",
+        "Given extra mode with ransom, when enabled, then prisoner stats reflect the match.",
+        "Given recap, when choosing rematch, then a new match is started with the same settings (unless changed)."
+      ],
+      "out_of_scope": [
+        "Global leaderboards",
+        "Sharing links"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "ConfirmDialog used for destructive actions (e.g., abandon match)",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["ui-03", "engine-07", "foundation-02"],
+      "design_gate_required": true
+    },
+    {
+      "id": "ui-06",
+      "title": "Build PWA install prompt component",
+      "priority": 21,
+      "type": "ui",
+      "epic": "game-ui",
+      "persona": "Player",
+      "user_story": "As a player, I want to be prompted to install the app after my first game so that I can easily add it to my homescreen.",
+      "description": "Create a custom PWA install prompt that appears after first game completion. Uses beforeinstallprompt event. Highlights benefits: offline play, notifications, quick access.",
+      "components_expected": [
+        "PwaInstallPrompt"
+      ],
+      "states_required": {
+        "empty": "N/A",
+        "loading": "N/A",
+        "error": "Install failed state with retry",
+        "success": "Installed or dismissed state"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Install CTA",
+        "secondary_elements": ["Benefits list"],
+        "supporting_elements": ["Dismiss button"]
+      },
+      "acceptance_criteria": [
+        "Given first game completion, when prompt triggers, then it appears with benefits explanation.",
+        "Given user accepts, when installed, then the prompt disappears and app launches from homescreen.",
+        "Given user dismisses, when dismissed, then prompt respects dismissal and doesn't reappear immediately.",
+        "Given already installed, when visiting, then prompt does not show."
+      ],
+      "out_of_scope": [
+        "Push notification permissions"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "UI QA checklist passed",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["foundation-03", "ui-05"],
+      "design_gate_required": true
+    },
+    {
+      "id": "ai-01",
+      "title": "Local multiplayer seat setup (2-4 players, colors, quick mode tokens)",
+      "priority": 21,
+      "type": "ui",
+      "epic": "ai-local",
+      "persona": "Player",
+      "user_story": "As a group of players, I want local setup so that we can play together on one device.",
+      "description": "Support 2-4 players with color assignment and optional quick mode (2 tokens per player).",
+      "components_expected": [
+        "SeatPicker",
+        "ColorPicker"
+      ],
+      "states_required": {
+        "empty": "No seats selected",
+        "loading": "N/A",
+        "error": "Conflicting colors/invalid seat count errors",
+        "success": "Valid setup"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Seat selection",
+        "secondary_elements": ["Color selection"],
+        "supporting_elements": ["Rule explanations"]
+      },
+      "acceptance_criteria": [
+        "Given 2-4 seats, when configured, then match can start.",
+        "Given duplicate color selection, when attempted, then it is prevented with explanation.",
+        "Given quick mode, when enabled, then the match initializes with 2 tokens per player."
+      ],
+      "out_of_scope": [
+        "Online invite rooms"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["ui-04", "foundation-02", "engine-01"],
+      "design_gate_required": true
+    },
+    {
+      "id": "ai-02",
+      "title": "Implement Easy AI (random valid move)",
+      "priority": 22,
+      "type": "non-ui",
+      "epic": "ai-local",
+      "persona": "Player",
+      "user_story": "As a solo player, I want an easy AI so that I can practice quickly.",
+      "description": "Choose randomly among valid actions/moves with simple tie-breakers.",
+      "acceptance_criteria": [
+        "Given a turn with valid moves, when AI acts, then it selects a legal move.",
+        "Given no valid moves, when AI acts, then it skips appropriately according to rules.",
+        "Given deterministic mode (seed), when replaying, then AI decisions are reproducible."
+      ],
+      "out_of_scope": [
+        "Advanced strategy"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["engine-06"],
+      "design_gate_required": false
+    },
+    {
+      "id": "ai-03",
+      "title": "Implement Medium AI (basic heuristics: capture priority, safety, finishing)",
+      "priority": 23,
+      "type": "non-ui",
+      "epic": "ai-local",
+      "persona": "Player",
+      "user_story": "As a solo player, I want a medium AI so that matches feel competitive.",
+      "description": "Heuristics: prefer captures, avoid immediate threats, prefer bringing tokens out, prefer finishing when close to home, consider stack safety in Extra mode.",
+      "acceptance_criteria": [
+        "Given an available capture, when safe, then AI prefers capture over non-capture.",
+        "Given a move that exposes a token to immediate capture, when alternatives exist, then AI avoids it.",
+        "Given finishing is possible, when it does not sacrifice a high-value capture, then AI prioritizes finishing."
+      ],
+      "out_of_scope": [
+        "Optimal play (Hard AI)"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["ai-02", "engine-05"],
+      "design_gate_required": false
+    },
+    {
+      "id": "ui-01b",
+      "title": "Build PlayerAvatar component with lutteurs fallback",
+      "priority": 16,
+      "type": "ui",
+      "epic": "game-ui",
+      "persona": "Player",
+      "user_story": "As a player, I want to see player avatars so that I can easily identify opponents and feel more engaged.",
+      "description": "Create a PlayerAvatar component that displays a player's image. Uses authenticated profile image if available; falls back to rotating lutteurs images (balla-gueye, eumeu-sene, franc, modou-lo) for unauthenticated/local play.",
+      "components_expected": [
+        "PlayerAvatar"
+      ],
+      "states_required": {
+        "empty": "Default avatar with lutteurs fallback",
+        "loading": "Skeleton avatar",
+        "error": "Fallback to default avatar icon",
+        "success": "Player image displayed"
+      },
+      "screen_hierarchy": {
+        "primary_element": "Avatar image",
+        "secondary_elements": ["Player name", "Status indicator"],
+        "supporting_elements": []
+      },
+      "acceptance_criteria": [
+        "Given authenticated user, when avatar renders, then profile image is displayed.",
+        "Given unauthenticated user, when avatar renders, then a lutteurs image is assigned consistently per player.",
+        "Given image load failure, when error occurs, then a fallback icon is shown.",
+        "Given reduced motion preference, when animating, then avatar transitions respect the preference."
+      ],
+      "out_of_scope": [
+        "Avatar upload",
+        "Custom avatar selection UI"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "UI QA checklist passed",
+        "Type-check passes (tsc --noEmit)",
+        "progress.md updated"
+      ],
+      "dependencies": ["foundation-02"],
+      "design_gate_required": true
+    },
+    {
+      "id": "online-01",
+      "title": "Draft online architecture spec (server-authoritative state + anti-cheat)",
+      "priority": 27,
+      "type": "non-ui",
+      "epic": "online-social",
+      "persona": "Player",
+      "user_story": "As an online player, I want fair matches so that cheating and desync are prevented.",
+      "description": "Write a minimal spec for server-authoritative action processing, deterministic dice generation, reconnect grace, and idempotent action handling.",
+      "acceptance_criteria": [
+        "Given the spec, when reviewed, then it defines inputs/outputs for client actions and server responses.",
+        "Given reconnect, when a client resumes, then the spec explains how to resync state.",
+        "Given duplicate actions, when received, then the spec defines idempotency behavior."
+      ],
+      "out_of_scope": [
+        "Implementation of networking"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "progress.md updated"
+      ],
+      "dependencies": ["engine-06"],
+      "design_gate_required": false
+    },
+    {
+      "id": "online-02",
+      "title": "Define WebSocket room protocol (create/join, state updates, chat stubs)",
+      "priority": 25,
+      "type": "non-ui",
+      "epic": "online-social",
+      "persona": "Player",
+      "user_story": "As a player, I want private rooms so that I can play with friends.",
+      "description": "Define message types for room creation/join, state sync, action submission, and minimal chat stubs.",
+      "acceptance_criteria": [
+        "Given a room, when a player joins, then the protocol specifies handshake + full state sync.",
+        "Given actions, when sent, then the protocol specifies acknowledgements and error codes.",
+        "Given chat, when used, then the protocol defines message payload shape."
+      ],
+      "out_of_scope": [
+        "Voice chat",
+        "Matchmaking"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "progress.md updated"
+      ],
+      "dependencies": ["online-01"],
+      "design_gate_required": false
+    },
+    {
+      "id": "online-03",
+      "title": "Define ranked points + leaderboard data model (future)",
+      "priority": 26,
+      "type": "non-ui",
+      "epic": "online-social",
+      "persona": "Competitive player",
+      "user_story": "As a competitive player, I want rankings so that I can track my progress.",
+      "description": "Specify how points are awarded per placement, how seasons reset, and what stats are stored per player.",
+      "acceptance_criteria": [
+        "Given placements, when computing points, then the model matches the rules doc (+500/+250/+100/+50).",
+        "Given a season reset, when applied, then the spec defines what persists and what resets.",
+        "Given leaderboards, when queried, then the spec defines pagination and caching strategy at a high level."
+      ],
+      "out_of_scope": [
+        "Implementing persistence",
+        "Anti-smurf detection"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria met",
+        "progress.md updated"
+      ],
+      "dependencies": ["online-01"],
+      "design_gate_required": false
+    }
+  ],
+  "summary": {
+    "total_tasks": 31,
+    "ui_tasks": 17,
+    "non_ui_tasks": 14
+  }
+}
