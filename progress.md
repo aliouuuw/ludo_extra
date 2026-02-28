@@ -174,3 +174,33 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-01: Define game state model and invariants for Classic + Extra rules
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/constants.ts` — named constants: `BOARD_SQUARE_COUNT` (52), `HOME_COLUMN_LENGTH` (5), `MAX_CONSECUTIVE_SIXES` (3), `STARTING_SQUARE` per color, `HOME_ENTRY_SQUARE` per color, `SAFE_SQUARES`
+- `src/engine/types.ts` — all TypeScript types: `PlayerColor`, `DiceValue`, `GameMode`, `GameStatus`, `TurnPhase`, `MoveType`, `TokenPosition`, `Token`, `Player`, `DiceRoll`, `MoveLogEntry`, `Prisoner`, `RuleToggles`, `TurnState`, `MatchMetadata`, `GameState`, `ActionErrorCode`, `ValidationResult`
+- `src/engine/invariants.ts` — `isValidPosition`, `validateGameState` (I1–I11), `assertValidState`
+- `src/engine/state.ts` — `EXTRA_MODE_DEFAULTS`, `CLASSIC_MODE_DEFAULTS`, `createInitialState` factory
+- `src/engine/index.ts` — barrel export
+
+**States implemented:** N/A (non-UI task)
+
+**Design decisions:**
+- `TokenPosition` is a discriminated union (`start | board | home_column | home`) for exhaustive switch handling at every move site
+- `prisoners` array is always present in `GameState`; invariant I8 enforces it is empty when `rules.ransom === false` — satisfies the AC directly
+- `ActionErrorCode` type defined here so UI and engine share the same vocabulary from day one (avoids string literals scattered across the codebase)
+- `assertValidState` is a no-op in production; active in dev/test
+- `STARTING_SQUARE` and `HOME_ENTRY_SQUARE` defined in `constants.ts`, shared with board-01 for render coordinate mapping
+
+**Assumptions made:**
+- Home column has 5 squares (index 0–4); token at index 4 transitions to zone `home` on exact landing
+- Standard Ludo layout: Red=0, Yellow=13, Green=26, Blue=39 — board-01 will validate against render grid
+- `createInitialState` places tokens at `zone: 'start'` unless `quickStart` is enabled, in which case tokens start at `STARTING_SQUARE[color]`
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
