@@ -275,3 +275,35 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-05: Implement Extra Mode advanced rules (territory captures, stacking, ransom, home-column exit)
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/extra-rules.ts`:
+  - `findStacks` / `getStackAtSquare` — detects same-color token stacks on the board
+  - `canCaptureAtSquare` — stack immunity guard (single token cannot capture a stack; stack requires equal-or-larger landing group)
+  - `resolveTerritoryCapture` — captures inside opponent home columns when territoryCaptures=true
+  - `getRetrievablePrisoners` — finds active player's tokens held as prisoners
+  - `applyRansomRetrieval` — returns prisoner to start, removes from prisoners list
+  - `computeHomeColumnExit` — computes exit destination (home_column → board STARTING_SQUARE) on roll=6
+  - `applyHomeColumnCaptureDisplacement` — displaces captured home-column tokens to start (no ransom for home column territory captures)
+  - `augmentSelectableTokensForExtraMode` — adds home-column-exit tokens and ransom retrieval flag to move options
+  - `isFinalHomeColumnIndex` — utility to detect center-home landing
+- `extra-rules.ts` added to barrel export
+
+**Design decisions:**
+- Stack capture guard uses count comparison (`landingSize >= stackSize`) so a 2-token stack can capture another 2-token stack — consistent with Extra Mode spec
+- Ransom only applies to board captures; home column territory captures always return to start (per spec: no ransom inside home columns)
+- `computeHomeColumnExit` is a pure function — the turn reducer (engine-06) decides whether to offer exit vs standard move
+- `augmentSelectableTokensForExtraMode` augments a base set from `getSelectableTokenIds` — layered design keeps Classic and Extra logic separated
+
+**Assumptions made:**
+- Home column exit always goes to `STARTING_SQUARE[color]` regardless of which home column index the token was at
+- `ransomRetrievalAvailable` is a boolean flag; actual prisoner selection (which prisoner to retrieve) is a UI-level decision handled by the turn reducer
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
