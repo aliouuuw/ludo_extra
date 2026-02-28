@@ -9,7 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 const INSTALL_DISMISSED_KEY = "ludo-extra-install-dismissed";
 const INSTALL_ACCEPTED_KEY = "ludo-extra-install-accepted";
-const DISMISS_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000; // 3 days before re-prompting
+const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days before re-prompting
 
 export type InstallState =
   | "idle"
