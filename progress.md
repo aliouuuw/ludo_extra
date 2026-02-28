@@ -115,3 +115,34 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — foundation-02: Build shared pattern components (EmptyState, ErrorState, LoadingState, ConfirmDialog, Toast)
+
+**Status:** Complete
+**Design Gate:** ✅ Passed (no gaps flagged)
+
+**What was built:**
+- `EmptyState` — Icon, title, description, optional primary/secondary actions
+- `ErrorState` — Error icon, title, description, optional retry action, secondary action
+- `LoadingState` — Spinner variant, skeleton-card, skeleton-list, skeleton generic with pulse animation
+- `ConfirmDialog` — Uses Modal, supports default/destructive variants, confirm/cancel actions
+- `Toast` — 4 variants (success/error/warning/info), auto-dismiss, manual dismiss, ToastContainer for positioning
+- `src/components/patterns/index.ts` barrel export
+- Added `@keyframes pulse` to globals.css
+
+**Accessibility features:**
+- EmptyState: role="status" for screen readers
+- ErrorState: role="alert" for error announcements
+- LoadingState: role="status" with aria-live="polite"
+- ConfirmDialog: Uses Modal accessibility (focus trap, aria-modal)
+- Toast: role="status", aria-live="polite", ToastContainer with aria-label
+
+**Design system compliance:**
+- All use semantic color tokens (error, success, warning, info)
+- Consistent spacing with --space-* tokens
+- Shadows from token scale
+- Border radius from token scale
+
+**Type-check:** ✅ Pass (tsc --noEmit)
+
+---
+
