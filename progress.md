@@ -445,6 +445,46 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### board-02 — Design Gate
+
+**User mental model:** The player sees the Ludo board in front of them. Their tokens and their opponents' tokens are visible in the right places. They can tap/click their own tokens when it's their turn. The board always shows them where everything is, and it responds to their selections.
+
+**New components:** `BoardSquare` (primitive), `TokenPiece` (primitive), `Board` (composite)
+**Existing components extended:** `ErrorState` (used as-is for board mapping failure)
+**States documented:** yes — empty (tokens in yards), error (mapping invalid), success (active game with selectables highlighted); TokenPiece: default/selectable/selected/opponent/home
+**Hierarchy decision:** Board dominates the viewport (max `min(90vw, 90vh)`, aspect-ratio 1:1)
+**Design system gaps flagged:** Player color tokens already existed (`--color-player-*`); no new tokens needed
+**Assumptions flagged:** 15-col grid at 375px = ~25px/cell (tight but usable); board-03 handles animations
+**Gate status:** Ready
+
+---
+
+### 2025-02-28 — board-02: Build interactive board UI (render board, tokens, safe squares)
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/components/primitives/BoardSquare.tsx` — grid cell with safe-square star, starting-square tint, center-home variant
+- `src/components/primitives/TokenPiece.tsx` — token with 5 status variants (default/selectable/selected/opponent/home), keyboard accessible, focus ring
+- `src/components/composites/Board.tsx` — 15×15 CSS grid, token placement via `getRenderCoord`, `ErrorState` for mapping failures
+- Added to `primitives/index.ts` and `composites/index.ts`
+
+**Design decisions:**
+- Board uses `min(90vw, 90vh)` with `aspect-ratio: 1` — fills the viewport on any device without overflowing
+- Yard cells are 6×6 corner areas with player color background tint; corridor cells use `BoardSquare`
+- `TokenPiece` uses `<button disabled>` for non-interactive states to maintain DOM semantics; focus ring applied via `onFocus`/`onBlur` (inline style) to avoid outline:none anti-pattern
+- Token stacking (multiple tokens same square) handled by `tokensByCoordKey` Map; rendered inside same cell
+
+**ACs verified:**
+- Given match state, all tokens appear at correct logical squares ✅
+- Given a selectable token, clicking triggers `onTokenSelect` callback ✅
+- Given responsive viewport, board remains usable via vw/vh constraint ✅
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
 ### 2025-02-28 — engine-10: Implement game state persistence (save/load via localStorage)
 
 **Status:** Complete
