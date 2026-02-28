@@ -183,6 +183,24 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
     });
   }
 
+  // AUTO-SELECT: Only one valid move and no ransom retrieval - auto-select it
+  // (User still needs to click Confirm to preserve animation flow)
+  if (selectableTokenIds.length === 1 && !ransomRetrievalAvailable) {
+    const autoSelectedTokenId = selectableTokenIds[0];
+    return ok({
+      ...state,
+      turn: {
+        ...state.turn,
+        phase: 'AWAITING_COMMIT',
+        diceResult: roll,
+        consecutiveSixes: newConsecutiveSixes,
+        bonusRollsRemaining: state.turn.bonusRollsRemaining + bonusRollsFromDice(roll),
+        selectedTokenId: autoSelectedTokenId,
+        validMoveTokenIds: selectableTokenIds,
+      },
+    });
+  }
+
   return ok({
     ...state,
     turn: {
@@ -225,20 +243,29 @@ function handleCommitMove(state: GameState): ActionResult {
     return err('WRONG_PHASE', `Cannot commit a move in phase "${state.turn.phase}".`);
   }
 
-  const { selectedTokenId, diceResult } = state.turn;
+  const { selectedTokenId } = state.turn;
 
   if (!selectedTokenId) {
     return err('NO_TOKEN_SELECTED', 'No token is selected.');
   }
+
+  return handleCommitMoveWithToken(state, selectedTokenId);
+}
+
+// ─── COMMIT_MOVE_WITH_TOKEN (internal, used for auto-commit) ───────────────────
+
+function handleCommitMoveWithToken(state: GameState, tokenId: string): ActionResult {
+  const { diceResult } = state.turn;
+
   if (!diceResult) {
     return err('NO_DICE_RESULT', 'No dice result available.');
   }
 
   const activePlayer = getActivePlayer(state);
-  const token = activePlayer.tokens.find((t) => t.id === selectedTokenId);
+  const token = activePlayer.tokens.find((t) => t.id === tokenId);
 
   if (!token) {
-    return err('TOKEN_NOT_SELECTABLE', `Token "${selectedTokenId}" not found for active player.`);
+    return err('TOKEN_NOT_SELECTABLE', `Token "${tokenId}" not found for active player.`);
   }
 
   // Home column exit (Extra Mode)
@@ -264,7 +291,7 @@ function handleCommitMove(state: GameState): ActionResult {
     return {
       ...p,
       tokens: p.tokens.map((t): Token => {
-        if (t.id !== selectedTokenId) return t;
+        if (t.id !== tokenId) return t;
         return { ...t, position: destination };
       }),
     };
@@ -277,7 +304,7 @@ function handleCommitMove(state: GameState): ActionResult {
 
   if (destination.zone === 'board') {
     // Stack guard (Extra Mode)
-    const landingIds = [selectedTokenId];
+    const landingIds = [tokenId];
     const canCapture = canCaptureAtSquare(landingIds, destination.square, token.color, updatedPlayers);
 
     if (canCapture) {
@@ -319,7 +346,7 @@ function handleCommitMove(state: GameState): ActionResult {
     state,
     diceResult,
     moveType,
-    selectedTokenId,
+    tokenId,
     token.position,
     destination,
     capturedTokenIds,
@@ -327,7 +354,10 @@ function handleCommitMove(state: GameState): ActionResult {
   );
 
   // ── Compute next turn state ───────────────────────────────────────────────
-  const totalBonusRemaining = state.turn.bonusRollsRemaining - 1 + captureBonus;
+  // bonusRollsRemaining already includes the +1 from rolling 6 (added in handleRollDice).
+  // captureBonus adds +1 if a capture occurred. We do NOT subtract here — subtraction
+  // happens in buildNextTurnState when the player retains the turn, consuming one credit.
+  const totalBonusRemaining = state.turn.bonusRollsRemaining + captureBonus;
   const updatedPrisoners = [...state.prisoners, ...newPrisoners];
 
   const nextState = buildNextTurnState({
@@ -388,7 +418,8 @@ function handleRansomRetrieval(state: GameState, tokenId: string): ActionResult 
     tokenId
   );
 
-  const totalBonusRemaining = state.turn.bonusRollsRemaining - 1;
+  // bonusRollsRemaining = 1 since ransom requires dice == 6; buildNextTurnState consumes 1.
+  const totalBonusRemaining = state.turn.bonusRollsRemaining;
   const nextState = buildNextTurnState({
     state: {
       ...state,
@@ -428,14 +459,15 @@ function buildNextTurnState(params: {
   const { state, totalBonusRemaining } = params;
 
   if (totalBonusRemaining > 0) {
-    // Active player retains the turn with a bonus roll
+    // Active player retains the turn with a bonus roll.
+    // Consume 1 credit from the pool — the player uses one bonus cycle for the next roll.
     return {
       ...state,
       turn: {
         ...state.turn,
         phase: 'AWAITING_ROLL',
         diceResult: null,
-        bonusRollsRemaining: totalBonusRemaining,
+        bonusRollsRemaining: totalBonusRemaining - 1,
         selectedTokenId: null,
         validMoveTokenIds: [],
       },

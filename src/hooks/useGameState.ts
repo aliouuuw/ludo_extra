@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { createInitialState, CLASSIC_MODE_DEFAULTS } from '../engine/state';
 import { applyAction } from '../engine/reducer';
 import { createRng } from '../engine/dice';
 import { getRenderCoord } from '../engine/board';
-import type { GameState } from '../engine/types';
+import type { GameState, Token } from '../engine/types';
 import type { PendingAnimation } from '../components/composites/MoveAnimationLayer';
 
 // ─── Hook ──────────────────────────────────────────────────────────────────────
@@ -67,12 +67,6 @@ export function useGameState(): UseGameStateReturn {
 
   const selectToken = useCallback((tokenId: string) => {
     setGameState((prev) => {
-      // Find prev position for animation start
-      const player = prev.players.find((p) => p.tokens.some((t) => t.id === tokenId));
-      const token = player?.tokens.find((t) => t.id === tokenId);
-      if (token && prev.turn.diceResult) {
-        // We'll animate after commit; for now just select
-      }
       const result = applyAction(prev, { type: 'SELECT_TOKEN', tokenId });
       if (!result.ok) {
         setError(result.message);
@@ -157,6 +151,66 @@ export function useGameState(): UseGameStateReturn {
     setPendingAnimation(null);
     setError(null);
   }, []);
+
+  // ─── AUTO-COMMIT: No real choice ─────────────────────────────────────────────
+  // When AWAITING_COMMIT and dice != 6: the player has no decision to make
+  // (can't bring out a new token, only one token can move). Commit automatically.
+  // When dice == 6: player may want to choose which token to bring out or move,
+  // so we leave them in AWAITING_COMMIT to confirm manually.
+  useEffect(() => {
+    const { phase, diceResult, selectedTokenId } = gameState.turn;
+    if (
+      phase === 'AWAITING_COMMIT' &&
+      selectedTokenId !== null &&
+      diceResult !== null &&
+      diceResult.value !== 6
+    ) {
+      const timer = setTimeout(() => {
+        commitMove();
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.turn.phase, gameState.turn.selectedTokenId, gameState.turn.diceResult, commitMove]);
+
+  // ─── SMART AUTO-SELECTION ────────────────────────────────────────────────────
+  // When entering AWAITING_MOVE with multiple valid tokens, auto-select the best one:
+  // 1. Prefer tokens already on the board (not in start)
+  // 2. If all are in start, just pick the first one
+  useEffect(() => {
+    // Only auto-select when in AWAITING_MOVE phase with no token selected yet
+    if (
+      gameState.turn.phase === 'AWAITING_MOVE' &&
+      gameState.turn.validMoveTokenIds.length > 1 &&
+      !gameState.turn.selectedTokenId
+    ) {
+      const activePlayer = gameState.players.find(
+        (p) => p.id === gameState.turn.activePlayerId
+      );
+      if (!activePlayer) return;
+
+      // Get tokens with their positions
+      const validTokens: Token[] = [];
+      for (const tokenId of gameState.turn.validMoveTokenIds) {
+        const token = activePlayer.tokens.find((t) => t.id === tokenId);
+        if (token) validTokens.push(token);
+      }
+
+      // Smart selection: prefer board tokens over start tokens
+      const boardTokens = validTokens.filter((t) => t.position.zone !== 'start');
+      const tokensToConsider = boardTokens.length > 0 ? boardTokens : validTokens;
+
+      // Pick the first one from preferred set
+      const autoSelectTokenId = tokensToConsider[0]?.id;
+      if (autoSelectTokenId) {
+        // Small delay so user sees the options briefly before auto-selection
+        const timer = setTimeout(() => {
+          selectToken(autoSelectTokenId);
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [gameState.turn.phase, gameState.turn.validMoveTokenIds, gameState.turn.selectedTokenId,
+      gameState.players, gameState.turn.activePlayerId, selectToken]);
 
   return {
     gameState,

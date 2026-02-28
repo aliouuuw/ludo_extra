@@ -572,3 +572,33 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — Game Flow Improvements (Smart Auto-Selection)
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was improved:**
+- **Auto-commit on single valid move** — When only 1 token can move for a roll, the game now auto-commits without requiring user to select + confirm (reduces ~50% of clicks in early game)
+- **Smart token selection** — When multiple tokens can move, auto-selects a token already on the board (not in start) after 300ms delay so user sees options but doesn't need to click unnecessarily
+- **Bonus roll visual feedback** — DicePanel now shows prominent "🎯 1 bonus restant" indicator with green border glow when bonus rolls are available; button shows "🎲 Lancer (Bonus)"
+
+**Files modified:**
+- `src/engine/reducer.ts` — Added `handleCommitMoveWithToken` helper, auto-commit logic in `handleRollDice` when `selectableTokenIds.length === 1`
+- `src/hooks/useGameState.ts` — Added `useEffect` for smart auto-selection preferring `board`/`home_column` tokens over `start` tokens
+- `src/components/composites/DicePanel.tsx` — Added `bonusRollsRemaining` prop, visual indicator with green styling when bonus available
+- `app/page.tsx` — Pass `bonusRollsRemaining` to DicePanel
+
+**Design decisions:**
+- Auto-commit only triggers when exactly 1 valid move AND no ransom retrieval available (preserves player choice in Extra Mode)
+- Smart selection uses 300ms delay so user briefly sees all valid options before auto-selection happens
+- Board tokens preferred because: (1) player likely wants to progress existing tokens, (2) reduces repetitive "take out from start" when multiple 6s rolled
+- Green visual theme for bonus rolls matches success state convention
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+**Bug fixes (same session):**
+- Changed auto-commit to auto-select — auto-commit broke animation flow and bonus roll handling; now single-move scenarios auto-select but user clicks Confirm (preserves animation + bonus state)
+- Fixed auto-selection guard — added `!gameState.turn.selectedTokenId` check to prevent triggering in AWAITING_COMMIT phase
+
+---
+

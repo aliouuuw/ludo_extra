@@ -88,6 +88,7 @@ export default function Home() {
               diceValue={turn.diceResult?.value ?? null}
               canceled={turn.diceResult?.canceled}
               bonusGranted={turn.diceResult?.bonusGranted}
+              bonusRollsRemaining={turn.bonusRollsRemaining}
               activePlayerName={activePlayer.name}
               activePlayerColor={activePlayer.color}
               onRoll={rollDice}

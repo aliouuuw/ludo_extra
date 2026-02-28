@@ -23,6 +23,7 @@ interface DicePanelProps {
   diceValue: DiceValue | null;
   canceled?: boolean;
   bonusGranted?: boolean;
+  bonusRollsRemaining?: number;
   activePlayerName: string;
   activePlayerColor: PlayerColor;
   onRoll: () => void;
@@ -57,6 +58,7 @@ export function DicePanel({
   diceValue,
   canceled = false,
   bonusGranted = false,
+  bonusRollsRemaining = 0,
   activePlayerName,
   activePlayerColor,
   onRoll,
@@ -66,6 +68,7 @@ export function DicePanel({
   const playerColor = PLAYER_COLOR_MAP[activePlayerColor];
   const canRoll = phase === 'AWAITING_ROLL';
   const canCommit = phase === 'AWAITING_COMMIT';
+  const hasBonusReady = bonusRollsRemaining > 0 && phase === 'AWAITING_ROLL';
 
   return (
     <div
@@ -76,11 +79,11 @@ export function DicePanel({
         gap: 'var(--space-4)',
         padding: 'var(--space-6)',
         backgroundColor: 'var(--color-surface)',
-        border: `2px solid ${playerColor}`,
+        border: `2px solid ${hasBonusReady ? 'var(--color-success)' : playerColor}`,
         borderRadius: 'var(--radius-lg)',
-        boxShadow: 'var(--shadow-md)',
+        boxShadow: hasBonusReady ? '0 0 0 3px rgba(34,197,94,0.2), var(--shadow-md)' : 'var(--shadow-md)',
         minWidth: 220,
-        transition: 'border-color var(--motion-state-ms) ease',
+        transition: 'border-color var(--motion-state-ms) ease, box-shadow var(--motion-state-ms) ease',
       }}
     >
       {/* Active player indicator */}
@@ -107,6 +110,28 @@ export function DicePanel({
         </span>
       </div>
 
+      {/* Bonus rolls indicator */}
+      {hasBonusReady && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+            padding: 'var(--space-1) var(--space-3)',
+            backgroundColor: 'rgba(34,197,94,0.1)',
+            borderRadius: 'var(--radius-full)',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 600,
+            color: 'var(--color-success)',
+          }}
+        >
+          <span>🎯</span>
+          <span>
+            {bonusRollsRemaining === 1 ? '1 bonus restant' : `${bonusRollsRemaining} bonus restants`}
+          </span>
+        </div>
+      )}
+
       {/* Dice face */}
       <div
         aria-label={diceValue ? `Dé : ${diceValue}` : 'Pas encore lancé'}
@@ -122,8 +147,8 @@ export function DicePanel({
         {diceValue ? DICE_FACES[diceValue] : '⚀'}
       </div>
 
-      {/* Bonus indicator */}
-      {bonusGranted && !canceled && (
+      {/* Bonus indicator (legacy) */}
+      {bonusGranted && !canceled && !hasBonusReady && (
         <span
           style={{
             fontSize: 'var(--text-sm)',
@@ -131,7 +156,7 @@ export function DicePanel({
             fontWeight: 500,
           }}
         >
-          🎯 Bonus — lancez à nouveau !
+          🎯 Bonus accordé !
         </span>
       )}
 
@@ -160,6 +185,7 @@ export function DicePanel({
             transition: 'background-color var(--motion-state-ms) ease',
             outline: 'none',
             minWidth: 160,
+            boxShadow: hasBonusReady ? '0 2px 8px rgba(34,197,94,0.3)' : 'none',
           }}
           onFocus={(e) => {
             if (canRoll || canCommit) {
@@ -170,9 +196,9 @@ export function DicePanel({
           onBlur={(e) => {
             (e.currentTarget as HTMLElement).style.outline = 'none';
           }}
-          aria-label={canRoll ? 'Lancer le dé' : canCommit ? 'Confirmer le déplacement' : 'En attente'}
+          aria-label={canRoll ? (hasBonusReady ? 'Lancer le dé (bonus disponible)' : 'Lancer le dé') : canCommit ? 'Confirmer le déplacement' : 'En attente'}
         >
-          {canRoll ? 'Lancer 🎲' : canCommit ? 'Confirmer ✓' : 'En attente…'}
+          {canRoll ? (hasBonusReady ? '🎲 Lancer (Bonus)' : '🎲 Lancer') : canCommit ? '✓ Confirmer' : 'En attente…'}
         </button>
       )}
 
