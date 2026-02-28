@@ -90,3 +90,28 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — foundation-01c: Create composite UI components (Card, Modal, Tooltip)
+
+**Status:** Complete
+**Design Gate:** ✅ Passed (no gaps flagged)
+
+**What was built:**
+- `Card` component with 4 elevation levels (none/sm/md/lg), hover elevation lift, configurable padding
+- `Modal` component with focus trap, Escape to close, body scroll lock, click-outside to close, 3 sizes
+- `Tooltip` component with hover/focus triggers, 4 positions (top/bottom/left/right), configurable delay
+- `src/components/composites/index.ts` barrel export
+
+**Accessibility features:**
+- Modal: focus trap cycles through focusable elements, returns focus to trigger on close, aria-modal="true"
+- Tooltip: shows on focus for keyboard users, aria-hidden when not visible
+- Card: role="button" when clickable, visible focus outline
+
+**Design system compliance:**
+- Card: shadow-sm default, radius-lg, elevation hover states
+- Modal: shadow-lg, radius-lg, 200ms entrance animation (transform/opacity only)
+- Tooltip: shadow-md, radius-md, neutral-800 background
+
+**Type-check:** ✅ Pass (tsc --noEmit)
+
+---
+

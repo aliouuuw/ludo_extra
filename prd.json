@@ -126,7 +126,9 @@
         "progress.md updated"
       ],
       "dependencies": ["foundation-01b"],
-      "design_gate_required": true
+      "design_gate_required": true,
+      "status": "completed",
+      "completed_date": "2025-02-28"
     },
     {
       "id": "foundation-02",
