@@ -195,6 +195,18 @@ export const gameMachine = setup({
         // ── User must click "Confirmer" (or deselect) ──────────────────────
         awaitingCommit: {
           on: {
+            SELECT_TOKEN: {
+              actions: assign(({ context, event }) => {
+                const result = applyAction(context.gameState, {
+                  type: 'SELECT_TOKEN',
+                  tokenId: event.tokenId,
+                });
+                if (!result.ok) {
+                  return { error: result.message };
+                }
+                return { gameState: result.state, error: null };
+              }),
+            },
             COMMIT_MOVE: {
               target: 'committing',
               actions: assign(({ context }) => ({

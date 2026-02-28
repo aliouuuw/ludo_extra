@@ -95,6 +95,7 @@ export function Board({
       if (selectedTokenId === token.id) {
         return { ...token, status: 'selected' };
       }
+      // Keep 'selectable' status even if another token is currently 'selected'
       if (isActive && validMoveTokenIds.has(token.id)) {
         return { ...token, status: 'selectable' };
       }

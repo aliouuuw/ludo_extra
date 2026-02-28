@@ -242,7 +242,7 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
 // ─── SELECT_TOKEN ─────────────────────────────────────────────────────────────
 
 function handleSelectToken(state: GameState, tokenId: string): ActionResult {
-  if (state.turn.phase !== 'AWAITING_MOVE') {
+  if (state.turn.phase !== 'AWAITING_MOVE' && state.turn.phase !== 'AWAITING_COMMIT') {
     return err('WRONG_PHASE', `Cannot select a token in phase "${state.turn.phase}".`);
   }
 
