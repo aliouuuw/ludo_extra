@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { PWARegister } from "../src/components/PWARegister";
+import { InstallBanner } from "../src/components/composites/InstallBanner";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -35,6 +36,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <PWARegister />
+        <InstallBanner />
         {children}
       </body>
     </html>
