@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { PWARegister } from "../src/components/PWARegister";
 
 export const metadata: Metadata = {
   title: "Ludo Extra",
@@ -32,6 +33,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet" />
       </head>
       <body className="antialiased">
+        <PWARegister />
         {children}
       </body>
     </html>
