@@ -553,3 +553,20 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-11: Fix home column coordinates
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- Fixed home column coordinates in `src/engine/board.ts` to match the actual entry squares for all players:
+  - Red: Enters via col 2, row 8 -> Home col is row 7 (cols 1-5)
+  - Yellow: Enters via col 8, row 0 -> Home col is col 7 (rows 1-5)
+  - Green: Enters via col 14, row 7 -> Home col is row 7 (cols 13-9)
+  - Blue: Enters via col 8, row 14 -> Home col is col 7 (rows 13-9)
+- Verified the coordinates point correctly toward the center (7, 7).
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
