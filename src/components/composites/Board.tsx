@@ -294,7 +294,7 @@ export function Board({
             zIndex: 0,
             pointerEvents: 'none',
             background:
-              'conic-gradient(from 45deg, var(--color-player-yellow) 0deg 90deg, var(--color-player-green) 90deg 180deg, var(--color-player-blue) 180deg 270deg, var(--color-player-red) 270deg 360deg)',
+              'conic-gradient(from -45deg, var(--color-player-yellow) 0deg 90deg, var(--color-player-green) 90deg 180deg, var(--color-player-blue) 180deg 270deg, var(--color-player-red) 270deg 360deg)',
             opacity: 0.6,
           }}
         />
