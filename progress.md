@@ -146,3 +146,31 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+## Verification Pass (2025-02-28)
+
+**Scope:** Re-verified all completed tasks before moving to next priority.
+
+### foundation-01 — Design system tokens + copy constants
+- All ACs confirmed passing.
+- Found: task was never marked `"status": "completed"` in prd.json — fixed.
+
+### foundation-01b — UI primitives (Button, Text, IconButton)
+- All ACs confirmed passing.
+- Minor finding: `Button` uses inline ternary for `minHeight` values instead of named constants. Non-blocking.
+
+### foundation-01c — Composites (Card, Modal, Tooltip)
+- All ACs confirmed passing. Focus trap, Escape handling, and token compliance verified.
+
+### foundation-02 — Pattern components
+- All ACs confirmed passing. All 5 components verified with correct ARIA roles and variants.
+
+### foundation-03 — PWA manifest + service worker scaffolding
+- Manifest valid, VitePWA configured, service worker scaffolded.
+- Found: `public/icons/` contained only a README — all 10 PNG icon files were missing, causing manifest references to 404.
+- Fix: Created `scripts/gen-icons.ts` and generated all 10 placeholder PNGs (valid 8-bit RGB PNG, dark background with white "L" logo mark). Confirmed valid via `file` command.
+- Lighthouse AC remains unverifiable until a production build is run, but the missing-icon blocker is resolved.
+
+**Decision:** `scripts/gen-icons.ts` kept in repo as a utility to regenerate icons when real branding assets are ready.
+
+---
+
