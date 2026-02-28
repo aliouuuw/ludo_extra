@@ -100,28 +100,31 @@ export function computeDestination(
  * Resolves the final position within (or at the end of) the home column.
  *
  * `index` is the 0-based target index after applying the roll.
- * The last valid index is HOME_COLUMN_LENGTH - 1 (index 4 for a 5-square column).
- * Landing exactly there means the token reaches home (center).
+ * HOME_COLUMN_LENGTH = 5 means there are 5 cells (indices 0-4).
+ * To finish (enter home/center), token must land at index HOME_COLUMN_LENGTH (5),
+ * which is one step beyond the last cell.
+ *
+ * Example: Token at index 3, needs roll of 2 to reach index 5 and finish.
  *
  * Overshoot behavior:
- *   'stay'   — token does not move if roll exceeds remaining home column squares (return null)
+ *   'stay'   — token does not move if roll exceeds the finish point
  *   'bounce' — token bounces backward from the center by the excess steps
  */
 function resolveHomeColumnLanding(
   index: number,
   overshoot: 'stay' | 'bounce'
 ): TokenPosition | null {
-  const lastIndex = HOME_COLUMN_LENGTH - 1;
-
-  if (index === lastIndex) {
+  // To finish, must land exactly at HOME_COLUMN_LENGTH (one beyond last cell)
+  if (index === HOME_COLUMN_LENGTH) {
     return { zone: 'home' };
   }
 
-  if (index < lastIndex) {
+  // Still within the home column cells
+  if (index < HOME_COLUMN_LENGTH) {
     return { zone: 'home_column', index };
   }
 
-  // Overshoot: index > lastIndex
+  // Overshoot: index > HOME_COLUMN_LENGTH
   if (overshoot === 'stay') {
     // Token does not move — return null to signal no valid landing
     // Caller (move generator) treats null as "move not available"
@@ -129,8 +132,8 @@ function resolveHomeColumnLanding(
   }
 
   // overshoot === 'bounce': bounce backward from center
-  const excess = index - lastIndex;
-  const bounced = lastIndex - excess;
+  const excess = index - HOME_COLUMN_LENGTH;
+  const bounced = HOME_COLUMN_LENGTH - 1 - excess;
   // If bounce goes below 0, it exits back onto the board — not implemented in Classic rules.
   // Per spec, home column exit only available in Extra Mode. Clamp to 0.
   return { zone: 'home_column', index: Math.max(0, bounced) };
