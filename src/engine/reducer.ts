@@ -135,7 +135,7 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
   });
 
   // Augment for Extra Mode (uses double-block-filtered list as base)
-  const { selectableTokenIds, ransomRetrievalAvailable } =
+  let { selectableTokenIds, ransomRetrievalAvailable } =
     augmentSelectableTokensForExtraMode({
       baseSelectableTokenIds: filteredSelectable,
       activePlayer,
@@ -143,6 +143,30 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
       prisoners: state.prisoners,
       rules: state.rules,
     });
+
+  // ── Deduplicate functionally identical options ────────────────────────────
+  // If multiple tokens are in the exact same position (e.g. 'start' yard, or
+  // doubled up on a single square), moving any of them is functionally identical.
+  // We keep only the first one found per position to avoid presenting false choices,
+  // which enables auto-select to kick in when appropriate.
+  const seenPositions = new Set<string>();
+  selectableTokenIds = selectableTokenIds.filter((tokenId) => {
+    const token = activePlayer.tokens.find((t) => t.id === tokenId)!;
+    let posKey: string;
+    if (token.position.zone === 'board') {
+      posKey = `board-${token.position.square}`;
+    } else if (token.position.zone === 'home_column') {
+      posKey = `home_column-${token.position.index}`;
+    } else {
+      posKey = token.position.zone; // 'start' or 'home'
+    }
+
+    if (seenPositions.has(posKey)) {
+      return false;
+    }
+    seenPositions.add(posKey);
+    return true;
+  });
 
   // No moves available and no ransom retrieval: auto-skip
   if (selectableTokenIds.length === 0 && !ransomRetrievalAvailable) {

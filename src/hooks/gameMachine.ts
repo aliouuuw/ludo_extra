@@ -1,7 +1,7 @@
 import { setup, assign } from 'xstate';
 import { applyAction } from '../engine/reducer';
 import { createRng } from '../engine/dice';
-import type { GameState, Token } from '../engine/types';
+import type { GameState } from '../engine/types';
 import type { Rng } from '../engine/dice';
 
 // ─── Machine Context ───────────────────────────────────────────────────────────
@@ -10,8 +10,6 @@ export interface GameMachineContext {
   gameState: GameState;
   rng: Rng;
   error: string | null;
-  autoSelected: boolean;
-  autoCommitted: boolean;
 }
 
 // ─── Machine Events ────────────────────────────────────────────────────────────
@@ -25,30 +23,50 @@ export type GameMachineEvent =
   | { type: 'RANSOM_RETRIEVAL'; tokenId: string }
   | { type: 'CLEAR_ERROR' };
 
-// ─── Helper Functions ───────────────────────────────────────────────────────────
+// ─── Auto-play Decision ────────────────────────────────────────────────────────
 
-function getActivePlayer(ctx: GameMachineContext) {
-  return ctx.gameState.players.find(
-    (p) => p.id === ctx.gameState.turn.activePlayerId
+/**
+ * Determines whether the current post-roll state should be auto-committed
+ * without user interaction.
+ *
+ * Auto-commit criteria (all must be true):
+ *   1. Reducer already auto-selected a token (phase === AWAITING_COMMIT,
+ *      exactly 1 valid token).
+ *   2. There is no ambiguity — the player has no meaningful alternative.
+ *      Ambiguity exists when dice === 6 AND there are tokens still in start
+ *      that could be brought out AND there is also a token already on the board
+ *      that could move. The reducer would present multiple valid tokens in that
+ *      case (phase === AWAITING_MOVE), so we never reach here. But we guard
+ *      explicitly for safety.
+ *
+ * Cases that ARE auto-committed:
+ *   - Non-6 roll, single token on board → move it automatically.
+ *   - Roll of 6, all tokens in start → start the first one automatically
+ *     (no other option).
+ *   - Roll of 6, single selectable token (all others finished/blocked) → move it.
+ */
+function shouldAutoCommit(ctx: GameMachineContext): boolean {
+  const { turn } = ctx.gameState;
+  return (
+    turn.phase === 'AWAITING_COMMIT' &&
+    turn.selectedTokenId !== null &&
+    turn.validMoveTokenIds.length === 1
   );
 }
 
-function getPreferredTokenId(ctx: GameMachineContext): string | null {
-  const { validMoveTokenIds } = ctx.gameState.turn;
-  const activePlayer = getActivePlayer(ctx);
-  if (!activePlayer) return null;
+// ─── Shared commit logic ───────────────────────────────────────────────────────
 
-  const validTokens: Token[] = [];
-  for (const tokenId of validMoveTokenIds) {
-    const token = activePlayer.tokens.find((t) => t.id === tokenId);
-    if (token) validTokens.push(token);
+function commitMove(ctx: GameMachineContext): GameState {
+  const result = applyAction(ctx.gameState, { type: 'COMMIT_MOVE' });
+  if (!result.ok) {
+    throw new Error(result.message);
   }
-
-  const boardTokens = validTokens.filter((t) => t.position.zone !== 'start');
-  const tokensToConsider = boardTokens.length > 0 ? boardTokens : validTokens;
-
-  return tokensToConsider[0]?.id ?? null;
+  return result.state;
 }
+
+// ─── Auto-commit delay in ms ───────────────────────────────────────────────────
+// Long enough for the player to see the dice face, short enough to feel snappy.
+const AUTO_COMMIT_DELAY_MS = 400;
 
 // ─── Machine Definition ────────────────────────────────────────────────────────
 
@@ -65,104 +83,107 @@ export const gameMachine = setup({
     gameState: input.gameState,
     rng: input.rng,
     error: null,
-    autoSelected: false,
-    autoCommitted: false,
   }),
   states: {
     playing: {
       initial: 'awaitingRoll',
       states: {
+        // ── Player must click "Lancer" ──────────────────────────────────────
         awaitingRoll: {
-          entry: assign({
-            autoSelected: () => false,
-            autoCommitted: () => false,
-          }),
           on: {
             ROLL_DICE: {
-              target: 'rolling',
-              actions: assign({
-                gameState: ({ context }) => {
-                  const { gameState, rng } = context;
-                  const newRng = createRng(rng.state());
-                  const result = applyAction(gameState, {
-                    type: 'ROLL_DICE',
-                    rng: newRng,
-                  });
-                  if (!result.ok) {
-                    throw new Error(result.message);
-                  }
-                  return result.state;
-                },
-                rng: ({ context }) => createRng(context.rng.state()),
-                error: () => null,
+              target: 'routing',
+              actions: assign(({ context }) => {
+                const { gameState, rng } = context;
+                const nextRng = createRng(rng.state());
+                const result = applyAction(gameState, {
+                  type: 'ROLL_DICE',
+                  rng: nextRng,
+                });
+                if (!result.ok) {
+                  return { error: result.message };
+                }
+                return {
+                  gameState: result.state,
+                  rng: nextRng,
+                  error: null,
+                };
               }),
             },
           },
         },
-        rolling: {
+
+        // ── Routing hub — reads reducer output and decides next state ───────
+        // Evaluated synchronously via `always` guards, top to bottom.
+        // ORDER MATTERS: specific conditions before general ones.
+        routing: {
           always: [
+            // Reducer looped back to AWAITING_ROLL (skip, canceled 6, etc.)
             {
-              guard: ({ context }) => {
-                // Auto-commit when single move, no 6 rolled
-                const { validMoveTokenIds, diceResult } = context.gameState.turn;
-                const diceValue = diceResult?.value ?? 0;
-                return validMoveTokenIds.length === 1 && diceValue !== 6;
-              },
+              guard: ({ context }) =>
+                context.gameState.turn.phase === 'AWAITING_ROLL',
+              target: 'awaitingRoll',
+            },
+            // Reducer auto-selected single token AND auto-commit is safe
+            {
+              guard: ({ context }) => shouldAutoCommit(context),
               target: 'autoCommitting',
             },
+            // Reducer auto-selected single token but auto-commit not safe
+            // (shouldn't happen given current reducer logic, but defensive)
             {
-              guard: ({ context }) => {
-                // Auto-select when multiple moves but no token selected
-                const { validMoveTokenIds, selectedTokenId } = context.gameState.turn;
-                return validMoveTokenIds.length > 1 && !selectedTokenId;
-              },
-              target: 'autoSelecting',
+              guard: ({ context }) =>
+                context.gameState.turn.phase === 'AWAITING_COMMIT',
+              target: 'awaitingCommit',
             },
+            // Multiple tokens selectable — user must pick
             {
+              guard: ({ context }) =>
+                context.gameState.turn.phase === 'AWAITING_MOVE',
               target: 'awaitingMove',
             },
+            // Fallback: stay on awaitingRoll (should never reach here)
+            { target: 'awaitingRoll' },
           ],
         },
-        autoSelecting: {
-          after: {
-            '300': {
-              target: 'awaitingCommit',
-              actions: assign({
-                gameState: ({ context }) => {
-                  const preferredId = getPreferredTokenId(context);
-                  if (!preferredId) return context.gameState;
 
-                  const result = applyAction(context.gameState, {
-                    type: 'SELECT_TOKEN',
-                    tokenId: preferredId,
-                  });
-                  if (!result.ok) {
-                    return context.gameState;
-                  }
-                  return result.state;
-                },
-                autoSelected: () => true,
-              }),
+        // ── Auto-commit: brief delay so the player sees the dice result ─────
+        // Also accepts manual COMMIT_MOVE in case the user clicks fast.
+        autoCommitting: {
+          on: {
+            COMMIT_MOVE: {
+              target: 'committing',
+              actions: assign(({ context }) => ({
+                gameState: commitMove(context),
+                error: null,
+              })),
+            },
+          },
+          after: {
+            [AUTO_COMMIT_DELAY_MS]: {
+              target: 'committing',
+              actions: assign(({ context }) => ({
+                gameState: commitMove(context),
+                error: null,
+              })),
             },
           },
         },
+
+        // ── User must select a token ────────────────────────────────────────
         awaitingMove: {
           on: {
             SELECT_TOKEN: {
               target: 'awaitingCommit',
-              actions: assign({
-                gameState: ({ context, event }) => {
-                  const result = applyAction(context.gameState, {
-                    type: 'SELECT_TOKEN',
-                    tokenId: event.tokenId,
-                  });
-                  if (!result.ok) {
-                    throw new Error(result.message);
-                  }
-                  return result.state;
-                },
-                autoSelected: () => true,
-                error: () => null,
+              actions: assign(({ context, event }) => {
+                const result = applyAction(context.gameState, {
+                  type: 'SELECT_TOKEN',
+                  tokenId: event.tokenId,
+                });
+                if (!result.ok) {
+                  return { error: result.message };
+                }
+                return { gameState: result.state, error: null };
               }),
             },
             CLEAR_ERROR: {
@@ -170,45 +191,31 @@ export const gameMachine = setup({
             },
           },
         },
+
+        // ── User must click "Confirmer" (or deselect) ──────────────────────
         awaitingCommit: {
           on: {
             COMMIT_MOVE: {
               target: 'committing',
-              actions: assign({
-                gameState: ({ context }) => {
-                  const result = applyAction(context.gameState, {
-                    type: 'COMMIT_MOVE',
-                  });
-                  if (!result.ok) {
-                    throw new Error(result.message);
-                  }
-                  return result.state;
-                },
-                autoCommitted: () => true,
-                error: () => null,
-              }),
+              actions: assign(({ context }) => ({
+                gameState: commitMove(context),
+                error: null,
+              })),
             },
             DESELECT_TOKEN: {
               target: 'awaitingMove',
-              actions: assign({
-                autoSelected: () => false,
-              }),
             },
             RANSOM_RETRIEVAL: {
               target: 'committing',
-              actions: assign({
-                gameState: ({ context, event }) => {
-                  const result = applyAction(context.gameState, {
-                    type: 'COMMIT_RANSOM_RETRIEVAL',
-                    tokenId: event.tokenId,
-                  });
-                  if (!result.ok) {
-                    throw new Error(result.message);
-                  }
-                  return result.state;
-                },
-                autoCommitted: () => true,
-                error: () => null,
+              actions: assign(({ context, event }) => {
+                const result = applyAction(context.gameState, {
+                  type: 'COMMIT_RANSOM_RETRIEVAL',
+                  tokenId: event.tokenId,
+                });
+                if (!result.ok) {
+                  return { error: result.message };
+                }
+                return { gameState: result.state, error: null };
               }),
             },
             CLEAR_ERROR: {
@@ -216,35 +223,16 @@ export const gameMachine = setup({
             },
           },
         },
-        autoCommitting: {
-          after: {
-            '120': {
-              target: 'committing',
-              actions: assign({
-                gameState: ({ context }) => {
-                  const result = applyAction(context.gameState, {
-                    type: 'COMMIT_MOVE',
-                  });
-                  if (!result.ok) {
-                    throw new Error(result.message);
-                  }
-                  return result.state;
-                },
-                autoCommitted: () => true,
-                error: () => null,
-              }),
-            },
-          },
-        },
+
+        // ── Commit resolved — check for game over, then next roll ───────────
         committing: {
           always: [
             {
-              guard: ({ context }) => context.gameState.status === 'game_over',
+              guard: ({ context }) =>
+                context.gameState.status === 'game_over',
               target: '#game.gameOver',
             },
-            {
-              target: 'awaitingRoll',
-            },
+            { target: 'awaitingRoll' },
           ],
         },
       },
