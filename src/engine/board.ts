@@ -61,65 +61,65 @@ export interface RenderCoord {
  *       Blue exits bottom-left, LEFT row 8 bottom, UP col 6 home approach.
  */
 const COMMON_PATH_COORDS: readonly RenderCoord[] = [
-  // Red (0–12): left corridor from yard, UP the left edge, to top-center
-  { col: 0,  row: 6  }, // 0  — Red starting square (left corridor entry)
-  { col: 1,  row: 6  }, // 1
-  { col: 2,  row: 6  }, // 2
-  { col: 3,  row: 6  }, // 3
-  { col: 4,  row: 6  }, // 4
-  { col: 5,  row: 6  }, // 5
-  { col: 6,  row: 6  }, // 6  — corner
-  { col: 6,  row: 5  }, // 7
-  { col: 6,  row: 4  }, // 8  — safe square
-  { col: 6,  row: 3  }, // 9
-  { col: 6,  row: 2  }, // 10
-  { col: 6,  row: 1  }, // 11
-  { col: 6,  row: 0  }, // 12
+  // Red arm (0–12): row 6 going RIGHT → col 6 going UP → row 0 going RIGHT
+  { col: 1,  row: 6  }, // 0  — Red starting square
+  { col: 2,  row: 6  }, // 1
+  { col: 3,  row: 6  }, // 2
+  { col: 4,  row: 6  }, // 3
+  { col: 5,  row: 6  }, // 4
+  { col: 6,  row: 5  }, // 5
+  { col: 6,  row: 4  }, // 6
+  { col: 6,  row: 3  }, // 7
+  { col: 6,  row: 2  }, // 8  — safe square
+  { col: 6,  row: 1  }, // 9
+  { col: 6,  row: 0  }, // 10
+  { col: 7,  row: 0  }, // 11
+  { col: 8,  row: 0  }, // 12
 
-  // Yellow (13–25): top corridor from yard, RIGHT to top-right corner
-  { col: 7,  row: 0  }, // 13 — Yellow starting square (top corridor entry)
-  { col: 8,  row: 0  }, // 14
-  { col: 9,  row: 0  }, // 15
-  { col: 10, row: 0  }, // 16
-  { col: 11, row: 0  }, // 17
-  { col: 12, row: 0  }, // 18
-  { col: 13, row: 0  }, // 19
-  { col: 14, row: 0  }, // 20
-  { col: 14, row: 1  }, // 21
-  { col: 14, row: 2  }, // 22
-  { col: 14, row: 3  }, // 23
-  { col: 14, row: 4  }, // 24
-  { col: 14, row: 5  }, // 25
+  // Yellow arm (13–25): col 8 going DOWN → row 6 going RIGHT → col 14 going DOWN
+  { col: 8,  row: 1  }, // 13 — Yellow starting square
+  { col: 8,  row: 2  }, // 14
+  { col: 8,  row: 3  }, // 15
+  { col: 8,  row: 4  }, // 16
+  { col: 8,  row: 5  }, // 17
+  { col: 9,  row: 6  }, // 18
+  { col: 10, row: 6  }, // 19
+  { col: 11, row: 6  }, // 20
+  { col: 12, row: 6  }, // 21
+  { col: 13, row: 6  }, // 22
+  { col: 14, row: 6  }, // 23
+  { col: 14, row: 7  }, // 24
+  { col: 14, row: 8  }, // 25
 
-  // Green (26–38): right corridor from yard, DOWN to bottom-right corner
-  { col: 14, row: 6  }, // 26 — Green starting square (right corridor entry)
-  { col: 14, row: 7  }, // 27
-  { col: 14, row: 8  }, // 28
-  { col: 14, row: 9  }, // 29
-  { col: 14, row: 10 }, // 30
-  { col: 14, row: 11 }, // 31
-  { col: 14, row: 12 }, // 32
-  { col: 14, row: 13 }, // 33
-  { col: 14, row: 14 }, // 34
-  { col: 13, row: 14 }, // 35
-  { col: 12, row: 14 }, // 36
-  { col: 11, row: 14 }, // 37
-  { col: 10, row: 14 }, // 38
+  // Green arm (26–38): row 8 going LEFT → col 8 going DOWN → row 14 going LEFT
+  { col: 13, row: 8  }, // 26 — Green starting square
+  { col: 12, row: 8  }, // 27
+  { col: 11, row: 8  }, // 28
+  { col: 10, row: 8  }, // 29
+  { col: 9,  row: 8  }, // 30
+  { col: 8,  row: 9  }, // 31
+  { col: 8,  row: 10 }, // 32
+  { col: 8,  row: 11 }, // 33
+  { col: 8,  row: 12 }, // 34
+  { col: 8,  row: 13 }, // 35
+  { col: 8,  row: 14 }, // 36
+  { col: 7,  row: 14 }, // 37
+  { col: 6,  row: 14 }, // 38
 
-  // Blue (39–51): bottom corridor from yard, LEFT to bottom-left corner
-  { col: 9,  row: 14 }, // 39 — Blue starting square (bottom corridor entry)
-  { col: 8,  row: 14 }, // 40
-  { col: 7,  row: 14 }, // 41
-  { col: 6,  row: 14 }, // 42
-  { col: 5,  row: 14 }, // 43
-  { col: 4,  row: 14 }, // 44
-  { col: 3,  row: 14 }, // 45
-  { col: 2,  row: 14 }, // 46
-  { col: 1,  row: 14 }, // 47
-  { col: 0,  row: 14 }, // 48
-  { col: 0,  row: 13 }, // 49
-  { col: 0,  row: 12 }, // 50
-  { col: 0,  row: 11 }, // 51
+  // Blue arm (39–51): col 6 going UP → row 8 going LEFT → col 0 going UP
+  { col: 6,  row: 13 }, // 39 — Blue starting square
+  { col: 6,  row: 12 }, // 40
+  { col: 6,  row: 11 }, // 41
+  { col: 6,  row: 10 }, // 42
+  { col: 6,  row: 9  }, // 43
+  { col: 5,  row: 8  }, // 44
+  { col: 4,  row: 8  }, // 45
+  { col: 3,  row: 8  }, // 46
+  { col: 2,  row: 8  }, // 47
+  { col: 1,  row: 8  }, // 48
+  { col: 0,  row: 8  }, // 49
+  { col: 0,  row: 7  }, // 50
+  { col: 0,  row: 6  }, // 51
 ] as const;
 
 // ─── Home Column Coordinates ──────────────────────────────────────────────────
@@ -130,17 +130,18 @@ const COMMON_PATH_COORDS: readonly RenderCoord[] = [
  * Index 4 leads to the center home.
  */
 const HOME_COLUMN_COORDS: Record<PlayerColor, readonly RenderCoord[]> = {
-  // Red: last common sq 51 at (0,11). Home col runs RIGHT along row 7: cols 1→5
-  // Index 4 at (5,7) is adjacent to center (7,7)
+  // Red: entry sq 51 at (0,6). Home col runs RIGHT along row 7: cols 1→5
+  // Index 4 at (5,7) → step into center (7,7) via (6,7)
+  // Spec: row 8 cols 2-6 = r (Red home path)
   red: [
-    { col: 1, row: 7 }, // index 0 — first home column square
+    { col: 1, row: 7 }, // index 0
     { col: 2, row: 7 },
     { col: 3, row: 7 },
     { col: 4, row: 7 },
-    { col: 5, row: 7 }, // index 4 — adjacent to center
+    { col: 5, row: 7 }, // index 4
   ],
-  // Yellow: last common sq 12 at (6,0). Home col runs DOWN col 7: rows 1→5
-  // Index 4 at (7,5) is adjacent to center (7,7)
+  // Yellow: entry sq 12 at (8,0). Home col runs DOWN col 7: rows 1→5
+  // Spec: col 8 rows 2-6 = b (Blue/Yellow home path in spec, Yellow in engine)
   yellow: [
     { col: 7, row: 1 }, // index 0
     { col: 7, row: 2 },
@@ -148,8 +149,8 @@ const HOME_COLUMN_COORDS: Record<PlayerColor, readonly RenderCoord[]> = {
     { col: 7, row: 4 },
     { col: 7, row: 5 }, // index 4
   ],
-  // Green: last common sq 25 at (14,5). Home col runs LEFT along row 7: cols 13→9
-  // Index 4 at (9,7) is adjacent to center (7,7)
+  // Green: entry sq 25 at (14,8). Home col runs LEFT along row 7: cols 13→9
+  // Spec: row 8 cols 10-14 = y (Yellow/Green home path in spec, Green in engine)
   green: [
     { col: 13, row: 7 }, // index 0
     { col: 12, row: 7 },
@@ -157,8 +158,8 @@ const HOME_COLUMN_COORDS: Record<PlayerColor, readonly RenderCoord[]> = {
     { col: 10, row: 7 },
     { col: 9,  row: 7 }, // index 4
   ],
-  // Blue: last common sq 38 at (10,14). Home col runs UP col 7: rows 13→9
-  // Index 4 at (7,9) is adjacent to center (7,7)
+  // Blue: entry sq 38 at (6,14). Home col runs UP col 7: rows 13→9
+  // Spec: col 8 rows 10-14 = g (Green/Blue home path in spec, Blue in engine)
   blue: [
     { col: 7, row: 13 }, // index 0
     { col: 7, row: 12 },
@@ -188,12 +189,12 @@ const START_YARD_COORDS: Record<PlayerColor, readonly RenderCoord[]> = {
     { col: 11, row: 1 }, { col: 12, row: 1 },
     { col: 11, row: 2 }, { col: 12, row: 2 },
   ],
-  // Green yard = bottom-right in engine path (cols 9–14, rows 9–14) — path has green at sq 26 bottom-right
+  // Green yard = bottom-right (cols 9–14, rows 9–14)
   green: [
     { col: 11, row: 11 }, { col: 12, row: 11 },
     { col: 11, row: 12 }, { col: 12, row: 12 },
   ],
-  // Blue yard = bottom-left in engine path (cols 0–5, rows 9–14)
+  // Blue yard = bottom-left (cols 0–5, rows 9–14)
   blue: [
     { col: 1, row: 11 }, { col: 2, row: 11 },
     { col: 1, row: 12 }, { col: 2, row: 12 },

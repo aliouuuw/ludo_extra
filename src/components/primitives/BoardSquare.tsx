@@ -20,6 +20,7 @@ interface BoardSquareProps {
   isSafe?: boolean;
   playerColor?: PlayerColor | null;
   showMarker?: boolean;
+  isCenterZone?: boolean;
   isCenterHome?: boolean;
   children?: React.ReactNode;
 }
@@ -44,11 +45,12 @@ export function BoardSquare({
   isSafe = false,
   playerColor = null,
   showMarker = false,
+  isCenterZone = false,
   isCenterHome = false,
   children,
 }: BoardSquareProps) {
-  const bg = isCenterHome
-    ? 'var(--color-neutral-900)'
+  const bg = isCenterHome || isCenterZone
+    ? 'transparent'
     : playerColor
     ? PLAYER_SUBTLE_MAP[playerColor]
     : 'var(--color-neutral-100)';
@@ -59,7 +61,7 @@ export function BoardSquare({
         gridColumn: col + 1,
         gridRow: row + 1,
         backgroundColor: bg,
-        border: '1px solid var(--color-border)',
+        border: (isCenterHome || isCenterZone) ? 'none' : '1px solid var(--color-border)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

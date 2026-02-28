@@ -28,6 +28,9 @@ export const STARTING_SQUARE: Record<PlayerColor, number> = {
  * Board square from which a player's token enters its home column on the next step.
  * After a token lands on (or passes) this square having completed a full loop,
  * it transitions to zone 'home_column' at index 0.
+ *
+ * Derived from spec: red enters home col after sq 51 (0,6); yellow after sq 12 (8,0);
+ * green after sq 25 (14,8); blue after sq 38 (6,14).
  */
 export const HOME_ENTRY_SQUARE: Record<PlayerColor, number> = {
   red: 51,
@@ -39,5 +42,8 @@ export const HOME_ENTRY_SQUARE: Record<PlayerColor, number> = {
 /**
  * Fixed safe squares on the common path where, by default (Classic rules),
  * tokens cannot be captured. When Territory Captures is ON, immunity is removed.
+ *
+ * sq 0/13/26/39 = each color's starting square (always safe);
+ * sq 8/21/34/47 = mid-arm safe squares per spec.
  */
-export const SAFE_SQUARES: readonly number[] = [0, 8, 13, 21, 26, 34, 39, 47] as const; // sq 0/13/26/39 = starting squares; sq 8/21/34/47 = mid-arm safe squares
+export const SAFE_SQUARES: readonly number[] = [0, 8, 13, 21, 26, 34, 39, 47] as const;

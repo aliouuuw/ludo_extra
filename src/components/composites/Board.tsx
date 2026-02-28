@@ -158,19 +158,28 @@ export function Board({
       const coordKey = `${col}:${row}`;
       const tokensHere = tokensByCoordKey.get(coordKey) ?? [];
 
+      const isCenterZone = col >= 6 && col <= 8 && row >= 6 && row <= 8;
       const isCenterHome = col === CENTER_HOME_COORD.col && row === CENTER_HOME_COORD.row;
 
-      if (isCenterHome) {
+      if (isCenterZone) {
         cells.push(
-          <BoardSquare key={coordKey} col={col} row={row} isCenterHome>
-            {tokensHere.map((token) => (
-              <TokenPiece
-                key={token.id}
-                color={token.color}
-                status={token.status}
-                label={`Pion ${token.color} ${token.index + 1} — arrivée`}
-              />
-            ))}
+          <BoardSquare
+            key={coordKey}
+            col={col}
+            row={row}
+            isCenterZone
+            isCenterHome={isCenterHome}
+          >
+            {isCenterHome
+              ? tokensHere.map((token) => (
+                  <TokenPiece
+                    key={token.id}
+                    color={token.color}
+                    status={token.status}
+                    label={`Pion ${token.color} ${token.index + 1} — arrivée`}
+                  />
+                ))
+              : null}
           </BoardSquare>
         );
         continue;
@@ -276,6 +285,19 @@ export function Board({
           backgroundColor: 'var(--color-neutral-50)',
         }}
       >
+        <div
+          aria-hidden="true"
+          style={{
+            gridColumn: '7 / span 3',
+            gridRow: '7 / span 3',
+            position: 'relative',
+            zIndex: 0,
+            pointerEvents: 'none',
+            background:
+              'conic-gradient(from 45deg, var(--color-player-yellow) 0deg 90deg, var(--color-player-green) 90deg 180deg, var(--color-player-blue) 180deg 270deg, var(--color-player-red) 270deg 360deg)',
+            opacity: 0.6,
+          }}
+        />
         {cells}
       </div>
       <MoveAnimationLayer
