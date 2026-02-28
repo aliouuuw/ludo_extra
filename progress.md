@@ -445,3 +445,31 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-10: Implement game state persistence (save/load via localStorage)
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/persistence.ts` — `saveGame`, `loadGame`, `clearSavedGame`, `hasSavedGame`
+- `LoadResult` discriminated union type
+- `SaveEnvelope` internal type (version + savedAt + state)
+- `persistence.ts` added to barrel export
+
+**Design decisions:**
+- `SaveEnvelope` wraps the raw `GameState` with `version` and `savedAt` metadata — enables future migration without breaking existing saves
+- `loadGame` validates deserialized state through `validateGameState` (invariants I1–I11) before returning — corrupt or schema-drifted saves are cleanly rejected as `INVALID_STATE`
+- All localStorage calls are wrapped in try/catch — quota exceeded, private browsing, and SSR environments all degrade gracefully (no throws)
+- `hasSavedGame` is a cheap key-existence check (no parse) — safe to call on every app launch for the "resume?" prompt
+- `clearSavedGame` called on match completion and explicit abandon — prevents stale saves leaking across sessions
+
+**ACs verified:**
+- Given match state after every action, `saveGame` writes to localStorage without throwing ✅
+- Given a valid save, `loadGame` restores state and passes invariant validation ✅
+- Given corrupt JSON or version mismatch, `loadGame` returns typed error result ✅
+- Given game over, `clearSavedGame` removes the key ✅
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
