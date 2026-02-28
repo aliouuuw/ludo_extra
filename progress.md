@@ -251,3 +251,27 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-04: Implement capturing and safe-zone behavior (Classic + territory captures toggle)
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/capture.ts` — `isSquareSafe`, `resolveCaptureAtSquare`, `applyCaptureDisplacement`
+- `CaptureResult` interface
+- `capture.ts` added to barrel export
+
+**Design decisions:**
+- `isSquareSafe` is a single function that encodes both Classic (SAFE_SQUARES list) and Extra Mode (territoryCaptures=true → no immunity) — one place to change if rules evolve
+- `resolveCaptureAtSquare` only operates on `board` zone; home column captures are Extra Mode territory (engine-05)
+- `applyCaptureDisplacement` handles both Classic (return to start) and Ransom (become prisoner) paths; ransom position management delegated to engine-05 to keep this function's scope clean
+- `CaptureResult.bonusRollGranted` is always true on capture — the turn reducer (engine-06) applies it; no special-casing needed here
+
+**Assumptions made:**
+- Stack capture guard (Extra Mode: stacks of 2+ same-color tokens are unbreakable by single tokens) is layered on in engine-05
+- Home column captures (territory captures into home column) handled by engine-05
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+

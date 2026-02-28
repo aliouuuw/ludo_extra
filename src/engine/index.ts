@@ -4,3 +4,4 @@ export * from './invariants';
 export * from './state';
 export * from './dice';
 export * from './movement';
+export * from './capture';
