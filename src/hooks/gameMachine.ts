@@ -1,6 +1,7 @@
 import { setup, assign } from 'xstate';
 import { applyAction } from '../engine/reducer';
 import { createRng } from '../engine/dice';
+import { createInitialState } from '../engine/state';
 import type { GameState } from '../engine/types';
 import type { Rng } from '../engine/dice';
 
@@ -92,6 +93,32 @@ export const gameMachine = setup({
     rng: input.rng,
     error: null,
   }),
+  on: {
+    // Global reset - works from any state
+    RESET_GAME: {
+      target: '.playing.awaitingRoll',
+      actions: assign(({ context }) => {
+        const newRng = createRng(Date.now());
+        return {
+          gameState: createInitialState({
+            id: `game-${Date.now()}`,
+            seed: Date.now(),
+            mode: 'classic',
+            players: context.gameState.players.map(p => ({
+              id: p.id,
+              name: p.name,
+              color: p.color,
+              isAI: p.isAI,
+            })),
+            tokensPerPlayer: 4,
+            rules: context.gameState.rules,
+          }),
+          rng: newRng,
+          error: null,
+        };
+      }),
+    },
+  },
   states: {
     playing: {
       initial: 'awaitingRoll',

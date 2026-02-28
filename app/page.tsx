@@ -149,13 +149,13 @@ export default function Home() {
             })}
           </div>
 
-          {/* Debug: Set token to home column */}
-          {activePlayer && (
+          {/* Debug: Set token to home column - HIDDEN */}
+          {false && activePlayer && (
             <button
               type="button"
               onClick={() => {
                 // Debug: Move first non-home token of active player to home_column index 3
-                const tokenToMove = activePlayer.tokens.find(t => t.position.zone !== 'home');
+                const tokenToMove = activePlayer?.tokens.find(t => t.position.zone !== 'home');
                 if (!tokenToMove) return;
                 
                 // Use the debug function to set position
