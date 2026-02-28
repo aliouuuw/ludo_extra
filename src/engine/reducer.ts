@@ -29,6 +29,7 @@ import type { Rng } from './dice';
 
 export type GameAction =
   | { type: 'ROLL_DICE'; rng: Rng }
+  | { type: 'PRE_SELECT_TOKEN'; tokenId: string }
   | { type: 'SELECT_TOKEN'; tokenId: string }
   | { type: 'COMMIT_MOVE' }
   | { type: 'COMMIT_RANSOM_RETRIEVAL'; tokenId: string };
@@ -55,6 +56,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
 
   switch (action.type) {
     case 'ROLL_DICE':      return handleRollDice(state, action.rng);
+    case 'PRE_SELECT_TOKEN': return handlePreSelectToken(state, action.tokenId);
     case 'SELECT_TOKEN':   return handleSelectToken(state, action.tokenId);
     case 'COMMIT_MOVE':    return handleCommitMove(state);
     case 'COMMIT_RANSOM_RETRIEVAL': return handleRansomRetrieval(state, action.tokenId);
@@ -64,6 +66,39 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
       return err('WRONG_PHASE', 'Unknown action type.');
     }
   }
+}
+
+// ─── PRE_SELECT_TOKEN ─────────────────────────────────────────────────────────
+
+/**
+ * Allows the player to pre-select which token they intend to move before rolling.
+ * Only valid in AWAITING_ROLL phase. The token must belong to the active player.
+ * Pre-selection can be changed by calling this again with a different tokenId.
+ */
+function handlePreSelectToken(state: GameState, tokenId: string): ActionResult {
+  if (state.turn.phase !== 'AWAITING_ROLL') {
+    return err('WRONG_PHASE', `Cannot pre-select a token in phase "${state.turn.phase}".`);
+  }
+
+  const activePlayer = getActivePlayer(state);
+  const token = activePlayer.tokens.find((t) => t.id === tokenId);
+
+  if (!token) {
+    return err('TOKEN_NOT_SELECTABLE', `Token "${tokenId}" does not belong to the active player.`);
+  }
+
+  // Token must be in play (not in start yard, not finished)
+  if (token.position.zone === 'start' || token.position.zone === 'home') {
+    return err('TOKEN_NOT_SELECTABLE', `Token "${tokenId}" is not in play and cannot be pre-selected.`);
+  }
+
+  return ok({
+    ...state,
+    turn: {
+      ...state.turn,
+      preSelectedTokenId: tokenId,
+    },
+  });
 }
 
 // ─── ROLL_DICE ────────────────────────────────────────────────────────────────
@@ -96,6 +131,7 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
         diceResult: roll,
         consecutiveSixes: 0,
         bonusRollsRemaining: 0,
+        preSelectedTokenId: null,
         selectedTokenId: null,
         validMoveTokenIds: [],
         activePlayerId: nextPlayerId,
@@ -184,6 +220,7 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
           diceResult: roll,
           consecutiveSixes: newConsecutiveSixes,
           bonusRollsRemaining: bonusRemaining - 1,
+          preSelectedTokenId: null,
           selectedTokenId: null,
           validMoveTokenIds: [],
         },
@@ -200,9 +237,27 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
         diceResult: roll,
         consecutiveSixes: 0,
         bonusRollsRemaining: 0,
+        preSelectedTokenId: null,
         selectedTokenId: null,
         validMoveTokenIds: [],
         activePlayerId: nextPlayerId,
+      },
+    });
+  }
+
+  // PRE-SELECTION: If player pre-selected a token and it's valid for this roll, auto-select it
+  if (state.turn.preSelectedTokenId && selectableTokenIds.includes(state.turn.preSelectedTokenId)) {
+    return ok({
+      ...state,
+      turn: {
+        ...state.turn,
+        phase: 'AWAITING_COMMIT',
+        diceResult: roll,
+        consecutiveSixes: newConsecutiveSixes,
+        bonusRollsRemaining: state.turn.bonusRollsRemaining + bonusRollsFromDice(roll),
+        selectedTokenId: state.turn.preSelectedTokenId,
+        validMoveTokenIds: selectableTokenIds,
+        preSelectedTokenId: null, // Clear pre-selection after use
       },
     });
   }
@@ -221,6 +276,7 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
         bonusRollsRemaining: state.turn.bonusRollsRemaining + bonusRollsFromDice(roll),
         selectedTokenId: autoSelectedTokenId,
         validMoveTokenIds: selectableTokenIds,
+        preSelectedTokenId: null,
       },
     });
   }
@@ -235,6 +291,7 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
       bonusRollsRemaining: state.turn.bonusRollsRemaining + bonusRollsFromDice(roll),
       selectedTokenId: null,
       validMoveTokenIds: selectableTokenIds,
+      preSelectedTokenId: null,
     },
   });
 }
@@ -242,7 +299,7 @@ function handleRollDice(state: GameState, rng: Rng): ActionResult {
 // ─── SELECT_TOKEN ─────────────────────────────────────────────────────────────
 
 function handleSelectToken(state: GameState, tokenId: string): ActionResult {
-  if (state.turn.phase !== 'AWAITING_MOVE' && state.turn.phase !== 'AWAITING_COMMIT') {
+  if (state.turn.phase !== 'AWAITING_MOVE') {
     return err('WRONG_PHASE', `Cannot select a token in phase "${state.turn.phase}".`);
   }
 
@@ -492,6 +549,7 @@ function buildNextTurnState(params: {
         phase: 'AWAITING_ROLL',
         diceResult: null,
         bonusRollsRemaining: totalBonusRemaining - 1,
+        preSelectedTokenId: null,
         selectedTokenId: null,
         validMoveTokenIds: [],
       },
@@ -508,6 +566,7 @@ function buildNextTurnState(params: {
       diceResult: null,
       consecutiveSixes: 0,
       bonusRollsRemaining: 0,
+      preSelectedTokenId: null,
       selectedTokenId: null,
       validMoveTokenIds: [],
       activePlayerId: nextPlayerId,

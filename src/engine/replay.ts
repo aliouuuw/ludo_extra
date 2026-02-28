@@ -46,6 +46,7 @@ export interface ReplayRecord {
  */
 export type SerializedAction =
   | { type: 'ROLL_DICE'; rngSeed: number }
+  | { type: 'PRE_SELECT_TOKEN'; tokenId: string }
   | { type: 'SELECT_TOKEN'; tokenId: string }
   | { type: 'COMMIT_MOVE' }
   | { type: 'COMMIT_RANSOM_RETRIEVAL'; tokenId: string };
@@ -193,6 +194,8 @@ function hydrateAction(serialized: SerializedAction): GameAction {
   switch (serialized.type) {
     case 'ROLL_DICE':
       return { type: 'ROLL_DICE', rng: createRng(serialized.rngSeed) };
+    case 'PRE_SELECT_TOKEN':
+      return { type: 'PRE_SELECT_TOKEN', tokenId: serialized.tokenId };
     case 'SELECT_TOKEN':
       return { type: 'SELECT_TOKEN', tokenId: serialized.tokenId };
     case 'COMMIT_MOVE':
@@ -219,6 +222,8 @@ export function recordAction(action: GameAction): SerializedAction {
   switch (action.type) {
     case 'ROLL_DICE':
       return { type: 'ROLL_DICE', rngSeed: action.rng.state() };
+    case 'PRE_SELECT_TOKEN':
+      return { type: 'PRE_SELECT_TOKEN', tokenId: action.tokenId };
     case 'SELECT_TOKEN':
       return { type: 'SELECT_TOKEN', tokenId: action.tokenId };
     case 'COMMIT_MOVE':

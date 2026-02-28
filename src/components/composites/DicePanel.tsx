@@ -16,9 +16,10 @@
  * Do not use when: rendering replay (read-only mode)
  */
 
-import type { DiceValue, TurnPhase, PlayerColor } from '../../engine/types';
+import type { DiceValue, TurnPhase, PlayerColor, GameState } from '../../engine/types';
 
 interface DicePanelProps {
+  gameState: GameState;
   phase: TurnPhase;
   diceValue: DiceValue | null;
   canceled?: boolean;
@@ -42,11 +43,19 @@ const DICE_FACES: Record<DiceValue, string> = {
   1: '⚀', 2: '⚁', 3: '⚂', 4: '⚃', 5: '⚄', 6: '⚅',
 };
 
-function getPhaseLabel(phase: TurnPhase, playerName: string, canceled: boolean): string {
+function getPhaseLabel(
+  phase: TurnPhase, 
+  playerName: string, 
+  canceled: boolean,
+  requiresPreSelection: boolean
+): string {
   if (phase === 'GAME_OVER') return 'Partie terminée !';
   if (canceled) return `${playerName} — 3 fois 6, tour annulé !`;
   switch (phase) {
-    case 'AWAITING_ROLL':   return `${playerName} — Lancez le dé`;
+    case 'AWAITING_ROLL':   
+      return requiresPreSelection 
+        ? `${playerName} — Sélectionnez un pion` 
+        : `${playerName} — Lancez le dé`;
     case 'AWAITING_MOVE':   return `${playerName} — Choisissez un pion`;
     case 'AWAITING_COMMIT': return `${playerName} — Confirmez le déplacement`;
     case 'PROCESSING':      return `${playerName} — En cours…`;
@@ -54,6 +63,7 @@ function getPhaseLabel(phase: TurnPhase, playerName: string, canceled: boolean):
 }
 
 export function DicePanel({
+  gameState,
   phase,
   diceValue,
   canceled = false,
@@ -66,7 +76,15 @@ export function DicePanel({
   error,
 }: DicePanelProps) {
   const playerColor = PLAYER_COLOR_MAP[activePlayerColor];
-  const canRoll = phase === 'AWAITING_ROLL';
+  
+  // Determine if pre-selection is required
+  const activePlayer = gameState.players.find(p => p.id === gameState.turn.activePlayerId);
+  const tokensInPlay = activePlayer?.tokens.filter(
+    t => t.position.zone === 'board' || t.position.zone === 'home_column'
+  ).length ?? 0;
+  const requiresPreSelection = tokensInPlay > 1 && !gameState.turn.preSelectedTokenId;
+  
+  const canRoll = phase === 'AWAITING_ROLL' && !requiresPreSelection;
   const canCommit = phase === 'AWAITING_COMMIT';
   const hasBonusReady = bonusRollsRemaining > 0 && phase === 'AWAITING_ROLL';
 
@@ -106,7 +124,7 @@ export function DicePanel({
             textAlign: 'center',
           }}
         >
-          {getPhaseLabel(phase, activePlayerName, canceled)}
+          {getPhaseLabel(phase, activePlayerName, canceled, requiresPreSelection)}
         </span>
       </div>
 

@@ -186,6 +186,12 @@ export interface TurnState {
   consecutiveSixes: number;
   /** Additional rolls pending (from captures or non-canceled 6 rolls). */
   bonusRollsRemaining: number;
+  /**
+   * Token ID pre-selected by the player before rolling (AWAITING_ROLL phase).
+   * When multiple tokens are in play, the player must pre-select which one
+   * they intend to move before the dice is rolled. null if no pre-selection.
+   */
+  preSelectedTokenId: string | null;
   /** The token ID the player has selected for the current move, or null. */
   selectedTokenId: string | null;
   /** Token IDs that are legal to move for the current dice result. */

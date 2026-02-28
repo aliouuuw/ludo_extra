@@ -27,6 +27,7 @@ interface BoardProps {
   gameState: GameState;
   onTokenSelect: (tokenId: string) => void;
   onTokenDeselect: () => void;
+  onPreSelectToken: (tokenId: string) => void;
   pendingAnimation?: PendingAnimation | null;
   onAnimationComplete?: () => void;
 }
@@ -64,6 +65,7 @@ export function Board({
   gameState,
   onTokenSelect,
   onTokenDeselect,
+  onPreSelectToken,
   pendingAnimation = null,
   onAnimationComplete = () => {},
 }: BoardProps) {
@@ -83,7 +85,9 @@ export function Board({
   const { players, turn } = gameState;
   const activePlayerId = turn.activePlayerId;
   const selectedTokenId = turn.selectedTokenId;
+  const preSelectedTokenId = turn.preSelectedTokenId;
   const validMoveTokenIds = new Set(turn.validMoveTokenIds);
+  const phase = turn.phase;
 
   // Build enriched token list with status
   const allTokens: TokenWithStatus[] = players.flatMap((player) =>
@@ -92,11 +96,19 @@ export function Board({
       if (token.position.zone === 'home') {
         return { ...token, status: 'home' };
       }
+      // Post-roll selection (AWAITING_MOVE/AWAITING_COMMIT)
       if (selectedTokenId === token.id) {
         return { ...token, status: 'selected' };
       }
-      // Keep 'selectable' status even if another token is currently 'selected'
       if (isActive && validMoveTokenIds.has(token.id)) {
+        return { ...token, status: 'selectable' };
+      }
+      // Pre-roll selection (AWAITING_ROLL)
+      if (preSelectedTokenId === token.id) {
+        return { ...token, status: 'selected' };
+      }
+      if (phase === 'AWAITING_ROLL' && isActive && 
+          (token.position.zone === 'board' || token.position.zone === 'home_column')) {
         return { ...token, status: 'selectable' };
       }
       if (!isActive) {
@@ -203,21 +215,28 @@ export function Board({
             role="cell"
             aria-label={`Cour ${yardColor}`}
           >
-            {tokensHere.map((token) => (
-              <TokenPiece
-                key={token.id}
-                color={token.color}
-                status={token.status}
-                label={`Pion ${token.color} ${token.index + 1} — départ`}
-                onClick={
-                  token.status === 'selectable'
-                    ? () => onTokenSelect(token.id)
-                    : token.status === 'selected'
-                    ? () => onTokenDeselect()
-                    : undefined
-                }
-              />
-            ))}
+            {tokensHere.map((token) => {
+              const handleClick = 
+                token.status === 'selectable' && phase === 'AWAITING_ROLL'
+                  ? () => onPreSelectToken(token.id)
+                  : token.status === 'selectable'
+                  ? () => onTokenSelect(token.id)
+                  : token.status === 'selected' && phase === 'AWAITING_ROLL'
+                  ? () => onPreSelectToken(token.id) // Click again to change selection
+                  : token.status === 'selected'
+                  ? () => onTokenDeselect()
+                  : undefined;
+              
+              return (
+                <TokenPiece
+                  key={token.id}
+                  color={token.color}
+                  status={token.status}
+                  label={`Pion ${token.color} ${token.index + 1} — départ`}
+                  onClick={handleClick}
+                />
+              );
+            })}
           </div>
         );
         continue;
@@ -240,21 +259,28 @@ export function Board({
           playerColor={squarePlayerColor}
           showMarker={showMarker}
         >
-          {tokensHere.map((token) => (
-            <TokenPiece
-              key={token.id}
-              color={token.color}
-              status={token.status}
-              label={`Pion ${token.color} ${token.index + 1}`}
-              onClick={
-                token.status === 'selectable'
-                  ? () => onTokenSelect(token.id)
-                  : token.status === 'selected'
-                  ? () => onTokenDeselect()
-                  : undefined
-              }
-            />
-          ))}
+          {tokensHere.map((token) => {
+            const handleClick = 
+              token.status === 'selectable' && phase === 'AWAITING_ROLL'
+                ? () => onPreSelectToken(token.id)
+                : token.status === 'selectable'
+                ? () => onTokenSelect(token.id)
+                : token.status === 'selected' && phase === 'AWAITING_ROLL'
+                ? () => onPreSelectToken(token.id) // Click again to change selection
+                : token.status === 'selected'
+                ? () => onTokenDeselect()
+                : undefined;
+            
+            return (
+              <TokenPiece
+                key={token.id}
+                color={token.color}
+                status={token.status}
+                label={`Pion ${token.color} ${token.index + 1}`}
+                onClick={handleClick}
+              />
+            );
+          })}
         </BoardSquare>
       );
     }

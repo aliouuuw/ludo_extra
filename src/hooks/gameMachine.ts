@@ -16,6 +16,7 @@ export interface GameMachineContext {
 
 export type GameMachineEvent =
   | { type: 'ROLL_DICE' }
+  | { type: 'PRE_SELECT_TOKEN'; tokenId: string }
   | { type: 'SELECT_TOKEN'; tokenId: string }
   | { type: 'DESELECT_TOKEN' }
   | { type: 'COMMIT_MOVE' }
@@ -91,6 +92,18 @@ export const gameMachine = setup({
         // ── Player must click "Lancer" ──────────────────────────────────────
         awaitingRoll: {
           on: {
+            PRE_SELECT_TOKEN: {
+              actions: assign(({ context, event }) => {
+                const result = applyAction(context.gameState, {
+                  type: 'PRE_SELECT_TOKEN',
+                  tokenId: event.tokenId,
+                });
+                if (!result.ok) {
+                  return { error: result.message };
+                }
+                return { gameState: result.state, error: null };
+              }),
+            },
             ROLL_DICE: {
               target: 'routing',
               actions: assign(({ context }) => {
@@ -195,18 +208,6 @@ export const gameMachine = setup({
         // ── User must click "Confirmer" (or deselect) ──────────────────────
         awaitingCommit: {
           on: {
-            SELECT_TOKEN: {
-              actions: assign(({ context, event }) => {
-                const result = applyAction(context.gameState, {
-                  type: 'SELECT_TOKEN',
-                  tokenId: event.tokenId,
-                });
-                if (!result.ok) {
-                  return { error: result.message };
-                }
-                return { gameState: result.state, error: null };
-              }),
-            },
             COMMIT_MOVE: {
               target: 'committing',
               actions: assign(({ context }) => ({

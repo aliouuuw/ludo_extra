@@ -30,6 +30,7 @@ export interface UseGameStateReturn {
   gameState: GameState;
   pendingAnimation: PendingAnimation | null;
   rollDice: () => void;
+  preSelectToken: (tokenId: string) => void;
   selectToken: (tokenId: string) => void;
   deselectToken: () => void;
   commitMove: () => void;
@@ -57,6 +58,7 @@ export function useGameState(): UseGameStateReturn {
     gameState,
     pendingAnimation: null,
     rollDice: () => send({ type: 'ROLL_DICE' }),
+    preSelectToken: (tokenId: string) => send({ type: 'PRE_SELECT_TOKEN', tokenId }),
     selectToken: (tokenId: string) => send({ type: 'SELECT_TOKEN', tokenId }),
     deselectToken: () => send({ type: 'DESELECT_TOKEN' }),
     commitMove: () => send({ type: 'COMMIT_MOVE' }),

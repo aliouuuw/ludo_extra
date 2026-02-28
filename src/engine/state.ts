@@ -106,6 +106,7 @@ export function createInitialState(params: {
       diceResult: null,
       consecutiveSixes: 0,
       bonusRollsRemaining: 0,
+      preSelectedTokenId: null,
       selectedTokenId: null,
       validMoveTokenIds: [],
     },

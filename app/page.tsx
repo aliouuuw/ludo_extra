@@ -10,6 +10,7 @@ export default function Home() {
     gameState,
     pendingAnimation,
     rollDice,
+    preSelectToken,
     selectToken,
     deselectToken,
     commitMove,
@@ -75,6 +76,7 @@ export default function Home() {
             gameState={gameState}
             onTokenSelect={selectToken}
             onTokenDeselect={deselectToken}
+            onPreSelectToken={preSelectToken}
             pendingAnimation={pendingAnimation}
             onAnimationComplete={onAnimationComplete}
           />
@@ -84,6 +86,7 @@ export default function Home() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', minWidth: 220 }}>
           {activePlayer && (
             <DicePanel
+              gameState={gameState}
               phase={turn.phase}
               diceValue={turn.diceResult?.value ?? null}
               canceled={turn.diceResult?.canceled}
