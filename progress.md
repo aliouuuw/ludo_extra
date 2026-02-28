@@ -57,3 +57,36 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 - Transform/opacity-only animations for smooth 60fps on mobile
 - Foundation tasks prioritized: tokens → primitives → composites → patterns → features
 
+## Completed Tasks
+
+### 2025-02-28 — foundation-01b: Create UI primitives (Button, Text, IconButton)
+
+**Status:** Complete
+**Design Gate:** ✅ Passed (no gaps flagged)
+
+**What was built:**
+- `Text` primitive with 8 typography variants (caption through display), color options, and truncation support
+- `Button` primitive with 4 variants (primary/secondary/ghost/danger), 3 sizes, loading state, full keyboard accessibility
+- `IconButton` primitive for icon-only actions, same variants/sizes, keyboard accessible
+- `src/components/primitives/index.ts` barrel export
+- Added `@keyframes spin` to globals.css for loading spinners
+
+**States implemented:**
+- Button: default, hover, active, focus, disabled, loading
+- IconButton: same interactive states
+
+**Components created:** Text, Button, IconButton
+
+**Dependencies added:** lucide-react@0.575.0
+
+**Key design decisions:**
+- All components use CSS variables from tokens.css (no raw values)
+- Interactive states use 150ms motion-state-ms transition
+- Buttons have min-height (32px/40px/48px) for consistent touch targets
+- Focus states use outline with 2px offset (accessible)
+- Loading state renders spinner + disabled cursor
+
+**Type-check:** ✅ Pass (tsc --noEmit)
+
+---
+
