@@ -307,3 +307,30 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — engine-06: Create turn reducer and action processing
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/reducer.ts` — `applyAction` pure reducer, `GameAction` union, `ActionResult` discriminated union
+- Actions: `ROLL_DICE`, `SELECT_TOKEN`, `COMMIT_MOVE`, `COMMIT_RANSOM_RETRIEVAL`
+- Private helpers: `handleRollDice`, `handleSelectToken`, `handleCommitMove`, `handleRansomRetrieval`, `buildNextTurnState`, `deriveMoveType`, `buildLogEntry`, `getNextPlayerId`
+- `reducer.ts` added to barrel export
+
+**Design decisions:**
+- `applyAction` is a pure function (takes state + action, returns new state or error) — server-authoritative ready; no side effects
+- `GAME_OVER` guard at the top of `applyAction` rejects all actions once the match ends — satisfies AC3
+- Auto-skip: when no moves exist after a roll (and no ransom retrieval), a SKIP log entry is written and the turn advances automatically without requiring a UI action
+- Bonus roll accounting uses `bonusRollsRemaining` counter; captures and non-canceled 6s both increment it; `buildNextTurnState` drains it before advancing to next player
+- `assertValidState` called after every successful `COMMIT_MOVE` and `COMMIT_RANSOM_RETRIEVAL` to catch invariant violations in dev/test
+
+**Assumptions made:**
+- `ROLL_DICE` receives a live `Rng` instance from the caller (UI or AI); the reducer does not own the RNG — determinism is the caller's responsibility
+- Turn number in `MoveLogEntry` is the index of the log array at time of commit (monotonically increasing)
+- Win condition detection is engine-08; for now `getNextPlayerId` skips already-placed players but does not check for game-over
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
