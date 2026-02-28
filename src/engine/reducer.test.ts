@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import { createInitialState, CLASSIC_MODE_DEFAULTS } from './state';
 import { applyAction } from './reducer';
 import { createRng } from './dice';

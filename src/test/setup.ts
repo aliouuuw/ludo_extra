@@ -1,10 +1,9 @@
 import '@testing-library/jest-dom';
-import { vi, expect } from 'vitest';
 
 // Mock console methods in tests to reduce noise
-vi.spyOn(console, 'log').mockImplementation(() => {});
-vi.spyOn(console, 'warn').mockImplementation(() => {});
-vi.spyOn(console, 'error').mockImplementation(() => {});
+jest.spyOn(console, 'log').mockImplementation(() => {});
+jest.spyOn(console, 'warn').mockImplementation(() => {});
+jest.spyOn(console, 'error').mockImplementation(() => {});
 
 // Add custom matchers
 expect.extend({

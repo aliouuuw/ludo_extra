@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import { createRng, rollDice, bonusRollsFromDice } from './dice';
 import { MAX_CONSECUTIVE_SIXES } from './constants';
 import type { DiceValue } from './types';
