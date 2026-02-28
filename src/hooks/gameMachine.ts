@@ -95,6 +95,27 @@ export const gameMachine = setup({
   states: {
     playing: {
       initial: 'awaitingRoll',
+      on: {
+        // Debug event available in all playing substates
+        DEBUG_SET_TOKEN_POSITION: {
+          actions: assign(({ context, event }) => {
+            const updatedPlayers = context.gameState.players.map(p => {
+              const hasToken = p.tokens.some(t => t.id === event.tokenId);
+              if (!hasToken) return p;
+              return {
+                ...p,
+                tokens: p.tokens.map(t => 
+                  t.id === event.tokenId ? { ...t, position: event.position } : t
+                ),
+              };
+            });
+            return {
+              gameState: { ...context.gameState, players: updatedPlayers },
+              error: null,
+            };
+          }),
+        },
+      },
       states: {
         // ── Player must click "Lancer" ──────────────────────────────────────
         awaitingRoll: {
@@ -259,24 +280,6 @@ export const gameMachine = setup({
                   return { error: result.message };
                 }
                 return { gameState: result.state, error: null };
-              }),
-            },
-            DEBUG_SET_TOKEN_POSITION: {
-              actions: assign(({ context, event }) => {
-                const updatedPlayers = context.gameState.players.map(p => {
-                  const hasToken = p.tokens.some(t => t.id === event.tokenId);
-                  if (!hasToken) return p;
-                  return {
-                    ...p,
-                    tokens: p.tokens.map(t => 
-                      t.id === event.tokenId ? { ...t, position: event.position } : t
-                    ),
-                  };
-                });
-                return {
-                  gameState: { ...context.gameState, players: updatedPlayers },
-                  error: null,
-                };
               }),
             },
             CLEAR_ERROR: {
