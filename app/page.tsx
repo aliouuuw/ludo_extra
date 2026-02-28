@@ -17,6 +17,7 @@ export default function Home() {
     resetGame,
     onAnimationComplete,
     error,
+    debugSetTokenPosition,
   } = useGameState();
 
   const { turn, players, moveLog, status } = gameState;
@@ -147,6 +148,33 @@ export default function Home() {
               );
             })}
           </div>
+
+          {/* Debug: Set token to home column */}
+          {activePlayer && (
+            <button
+              type="button"
+              onClick={() => {
+                // Debug: Move first non-home token of active player to home_column index 3
+                const tokenToMove = activePlayer.tokens.find(t => t.position.zone !== 'home');
+                if (!tokenToMove) return;
+                
+                // Use the debug function to set position
+                debugSetTokenPosition(tokenToMove.id, { zone: 'home_column', index: 3 });
+                console.log('Debug: Moved token', tokenToMove.id, 'to home_column index 3');
+              }}
+              style={{
+                fontSize: 'var(--text-xs)',
+                padding: 'var(--space-2) var(--space-3)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px dashed var(--color-border)',
+                backgroundColor: 'var(--color-surface)',
+                cursor: 'pointer',
+                color: 'var(--color-neutral-500)',
+              }}
+            >
+              🐛 Set token to home column (index 3)
+            </button>
+          )}
 
           {/* Move log (last 6 entries) */}
           <div

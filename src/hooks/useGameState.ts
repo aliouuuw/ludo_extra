@@ -38,6 +38,8 @@ export interface UseGameStateReturn {
   onAnimationComplete: () => void;
   error: string | null;
   machineState: string;
+  // Debug
+  debugSetTokenPosition: (tokenId: string, position: { zone: 'start' } | { zone: 'board'; square: number } | { zone: 'home_column'; index: number } | { zone: 'home' }) => void;
 }
 
 export function useGameState(): UseGameStateReturn {
@@ -66,5 +68,6 @@ export function useGameState(): UseGameStateReturn {
     onAnimationComplete: () => {},
     error,
     machineState: JSON.stringify(state.value),
+    debugSetTokenPosition: (tokenId, position) => send({ type: 'DEBUG_SET_TOKEN_POSITION', tokenId, position }),
   };
 }

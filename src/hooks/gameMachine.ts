@@ -22,7 +22,9 @@ export type GameMachineEvent =
   | { type: 'COMMIT_MOVE' }
   | { type: 'RESET_GAME' }
   | { type: 'RANSOM_RETRIEVAL'; tokenId: string }
-  | { type: 'CLEAR_ERROR' };
+  | { type: 'CLEAR_ERROR' }
+  // Debug events
+  | { type: 'DEBUG_SET_TOKEN_POSITION'; tokenId: string; position: { zone: 'start' } | { zone: 'board'; square: number } | { zone: 'home_column'; index: number } | { zone: 'home' } };
 
 // ─── Auto-play Decision ────────────────────────────────────────────────────────
 
@@ -257,6 +259,24 @@ export const gameMachine = setup({
                   return { error: result.message };
                 }
                 return { gameState: result.state, error: null };
+              }),
+            },
+            DEBUG_SET_TOKEN_POSITION: {
+              actions: assign(({ context, event }) => {
+                const updatedPlayers = context.gameState.players.map(p => {
+                  const hasToken = p.tokens.some(t => t.id === event.tokenId);
+                  if (!hasToken) return p;
+                  return {
+                    ...p,
+                    tokens: p.tokens.map(t => 
+                      t.id === event.tokenId ? { ...t, position: event.position } : t
+                    ),
+                  };
+                });
+                return {
+                  gameState: { ...context.gameState, players: updatedPlayers },
+                  error: null,
+                };
               }),
             },
             CLEAR_ERROR: {

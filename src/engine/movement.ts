@@ -104,13 +104,13 @@ export function computeDestination(
  * Landing exactly there means the token reaches home (center).
  *
  * Overshoot behavior:
- *   'stay'   — token does not move if roll exceeds remaining home column squares
+ *   'stay'   — token does not move if roll exceeds remaining home column squares (return null)
  *   'bounce' — token bounces backward from the center by the excess steps
  */
 function resolveHomeColumnLanding(
   index: number,
   overshoot: 'stay' | 'bounce'
-): TokenPosition {
+): TokenPosition | null {
   const lastIndex = HOME_COLUMN_LENGTH - 1;
 
   if (index === lastIndex) {
@@ -121,11 +121,11 @@ function resolveHomeColumnLanding(
     return { zone: 'home_column', index };
   }
 
-  // Overshoot
+  // Overshoot: index > lastIndex
   if (overshoot === 'stay') {
     // Token does not move — return null to signal no valid landing
     // Caller (move generator) treats null as "move not available"
-    return { zone: 'home_column', index: index - (index - lastIndex) * 2 };
+    return null;
   }
 
   // overshoot === 'bounce': bounce backward from center
