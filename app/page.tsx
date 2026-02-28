@@ -1,65 +1,193 @@
-import Image from "next/image";
+'use client';
+
+import { useGameState } from '../src/hooks/useGameState';
+import { Board } from '../src/components/composites/Board';
+import { DicePanel } from '../src/components/composites/DicePanel';
+import '../src/styles/tokens.css';
 
 export default function Home() {
+  const {
+    gameState,
+    pendingAnimation,
+    rollDice,
+    selectToken,
+    deselectToken,
+    commitMove,
+    resetGame,
+    onAnimationComplete,
+    error,
+  } = useGameState();
+
+  const { turn, players, moveLog, status } = gameState;
+  const activePlayer = players.find((p) => p.id === turn.activePlayerId);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div
+      style={{
+        minHeight: '100dvh',
+        backgroundColor: 'var(--color-neutral-100)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: 'var(--space-4)',
+        gap: 'var(--space-4)',
+        fontFamily: 'Geist, sans-serif',
+      }}
+    >
+      {/* Header */}
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 900 }}>
+        <h1 style={{ fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-neutral-900)', margin: 0 }}>
+          Ludo Extra
+        </h1>
+        <button
+          type="button"
+          onClick={resetGame}
+          style={{
+            fontSize: 'var(--text-sm)',
+            padding: 'var(--space-2) var(--space-4)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--color-border)',
+            backgroundColor: 'var(--color-surface)',
+            cursor: 'pointer',
+            color: 'var(--color-neutral-700)',
+          }}
+        >
+          Nouvelle partie
+        </button>
+      </header>
+
+      {/* Main layout: board + panel */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          gap: 'var(--space-6)',
+          width: '100%',
+          maxWidth: 900,
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}
+      >
+        {/* Board */}
+        <div style={{ flex: '1 1 400px', minWidth: 0 }}>
+          <Board
+            gameState={gameState}
+            onTokenSelect={selectToken}
+            onTokenDeselect={deselectToken}
+            pendingAnimation={pendingAnimation}
+            onAnimationComplete={onAnimationComplete}
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        {/* Side panel */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', minWidth: 220 }}>
+          {activePlayer && (
+            <DicePanel
+              phase={turn.phase}
+              diceValue={turn.diceResult?.value ?? null}
+              canceled={turn.diceResult?.canceled}
+              bonusGranted={turn.diceResult?.bonusGranted}
+              activePlayerName={activePlayer.name}
+              activePlayerColor={activePlayer.color}
+              onRoll={rollDice}
+              onCommit={commitMove}
+              error={error}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          )}
+
+          {/* Standings */}
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--space-4)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-2)',
+            }}
           >
-            Documentation
-          </a>
+            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-neutral-600)' }}>
+              Joueurs
+            </span>
+            {players.map((p) => {
+              const tokensHome = p.tokens.filter((t) => t.position.zone === 'home').length;
+              const isActive = p.id === turn.activePlayerId && status === 'active';
+              return (
+                <div
+                  key={p.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 'var(--radius-full)',
+                      backgroundColor: `var(--color-player-${p.color})`,
+                      flexShrink: 0,
+                      opacity: isActive ? 1 : 0.7,
+                    }}
+                  />
+                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: isActive ? 600 : 400, flex: 1, color: 'var(--color-neutral-800)' }}>
+                    {p.name}
+                  </span>
+                  <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-neutral-500)' }}>
+                    {p.placement ? `#${p.placement}` : `${tokensHome}/4 🏠`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Move log (last 6 entries) */}
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--space-4)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-1)',
+              maxHeight: 180,
+              overflowY: 'auto',
+            }}
+          >
+            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-neutral-600)', marginBottom: 'var(--space-1)' }}>
+              Historique
+            </span>
+            {moveLog.length === 0 && (
+              <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-neutral-400)' }}>
+                Aucun coup joué
+              </span>
+            )}
+            {[...moveLog].reverse().slice(0, 10).map((entry, i) => {
+              const player = players.find((p) => p.id === entry.playerId);
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 'var(--radius-full)',
+                      backgroundColor: `var(--color-player-${player?.color ?? 'red'})`,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-neutral-600)' }}>
+                    {player?.name} — {entry.dice.value} — {entry.type}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

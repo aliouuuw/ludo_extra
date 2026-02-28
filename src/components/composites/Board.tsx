@@ -40,6 +40,13 @@ const YARD_COORDS: Record<PlayerColor, { col: number; row: number; colSpan: numb
   blue:   { col: 9, row: 9,  colSpan: 6, rowSpan: 6 },
 };
 
+const YARD_LABELS: Record<PlayerColor, string> = {
+  red: 'ROUGE',
+  yellow: 'JAUNE',
+  green: 'VERT',
+  blue: 'BLEU',
+};
+
 const PLAYER_BG: Record<PlayerColor, string> = {
   red:    'rgba(220,38,38,0.12)',
   yellow: 'rgba(234,179,8,0.12)',
@@ -167,6 +174,10 @@ export function Board({
 
       if (isYardCell(col, row)) {
         const yardColor = getYardColorForCell(col, row)!;
+        const isYardLabelCell = (yardColor === 'red' && col === 3 && row === 0) ||
+                                 (yardColor === 'yellow' && col === 11 && row === 0) ||
+                                 (yardColor === 'green' && col === 3 && row === 9) ||
+                                 (yardColor === 'blue' && col === 11 && row === 9);
         cells.push(
           <div
             key={coordKey}
@@ -178,10 +189,26 @@ export function Board({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              position: 'relative',
             }}
             role="cell"
             aria-label={`Cour ${yardColor}`}
           >
+            {isYardLabelCell && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 'var(--space-1)',
+                  fontSize: 'var(--text-caption)',
+                  fontWeight: 600,
+                  color: 'var(--color-neutral-500)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                {YARD_LABELS[yardColor]}
+              </span>
+            )}
             {tokensHere.map((token) => (
               <TokenPiece
                 key={token.id}
