@@ -10,3 +10,4 @@ export * from './reducer';
 export * from './replay';
 export * from './win';
 export * from './rule-variants';
+export * from './board';

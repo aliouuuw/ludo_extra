@@ -415,3 +415,33 @@ Ludo Extra is a browser-playable Ludo implementation where the default ruleset i
 
 ---
 
+### 2025-02-28 — board-01: Define board coordinate system and path mapping
+
+**Status:** Complete
+**Time:** ~1 cycle
+
+**What was built:**
+- `src/engine/board.ts` — `getRenderCoord`, `getCommonPath`, `getHomeColumnCoords`, `isFixedSafeSquare`, `getSquareColor`, `validateBoardMapping`
+- `RenderCoord` interface (`col`, `row` on a 15×15 grid)
+- `COMMON_PATH_COORDS` — 52 hard-coded clockwise board square render positions
+- `HOME_COLUMN_COORDS` — 5 squares per color, index 0 = entry, index 4 = center-adjacent
+- `START_YARD_COORDS` — 4 token slots per yard
+- `CENTER_HOME_COORD` — (7, 7)
+- `board.ts` added to barrel export
+
+**Design decisions:**
+- 15×15 grid: standard Ludo cross layout; 6×6 yards in each corner, 3-wide corridor through the center
+- `COMMON_PATH_COORDS` starts at Red's starting square (square 0, col 6, row 14) and proceeds clockwise — consistent with `constants.ts` STARTING_SQUARE assignments
+- `getRenderCoord` accepts optional `tokenIndex` for start-yard slot selection (4 slots per yard, 4 tokens per player standard)
+- `validateBoardMapping` asserts path length = 52, home column length = 5 per color, all HOME_ENTRY_SQUARE values in range — run once at app startup in dev
+- `getSquareColor` returns color for starting squares only (used for board square coloring in the renderer)
+
+**ACs verified:**
+- AC1: `getRenderCoord` produces a stable coordinate for every valid TokenPosition ✅
+- AC2: `getHomeColumnCoords` returns 5 entries (0–4) for every color ✅
+- AC3: `getCommonPath` returns exactly 52 entries ✅
+
+**Type-check:** ✅ Pass (tsc --noEmit, exit 0)
+
+---
+
